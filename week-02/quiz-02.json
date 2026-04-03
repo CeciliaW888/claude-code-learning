@@ -1,0 +1,50 @@
+[
+  {
+    "id": "w2q1",
+    "day": 8,
+    "question": "BashTool 使用什么技术来检测危险命令？",
+    "options": ["正则表达式", "AST（抽象语法树）解析", "字符串包含检查", "机器学习分类"],
+    "answer": 1,
+    "explanation": "BashTool 使用 AST 解析 Shell 命令结构，比正则更准确地检测危险操作如管道命令链。"
+  },
+  {
+    "id": "w2q2",
+    "day": 9,
+    "question": "FileEditTool 为什么使用文本匹配（old_str/new_str）而不是行号编辑？",
+    "options": ["性能更好", "行号会随编辑偏移", "更容易实现", "API 要求"],
+    "answer": 1,
+    "explanation": "行号在多次编辑后会偏移。文本匹配更可靠——只要内容不变，匹配就准确。"
+  },
+  {
+    "id": "w2q3",
+    "day": 10,
+    "question": "query() 核心循环什么时候会终止？",
+    "options": ["固定循环 10 次", "Claude 不再调用任何工具时", "用户输入 exit 时", "超过 5 分钟时"],
+    "answer": 1,
+    "explanation": "当 Claude 返回的消息不包含任何 tool_use 块时，表示任务完成，循环终止。"
+  },
+  {
+    "id": "w2q4",
+    "day": 11,
+    "question": "CLAUDE.md 文件的搜索优先级是怎样的？",
+    "options": ["用户级 > 项目级", "项目级 > 用户级", "只看项目级", "随机选择"],
+    "answer": 1,
+    "explanation": "项目级 CLAUDE.md 优先于用户级，这样每个项目可以有自己的规则覆盖全局设置。"
+  },
+  {
+    "id": "w2q5",
+    "day": 12,
+    "question": "Claude Code 的三种压缩策略中，最简单的是哪个？",
+    "options": ["Full Compact", "MicroCompact", "Snip Compact", "Auto Compact"],
+    "answer": 2,
+    "explanation": "Snip Compact 最简单——直接截断过长的工具输出，保留头尾。"
+  },
+  {
+    "id": "w2q6",
+    "day": 13,
+    "question": "子 Agent 在什么情况下会自动转为后台执行？",
+    "options": ["立即后台化", "运行超过 2 分钟时", "用户请求时", "内存不足时"],
+    "answer": 1,
+    "explanation": "Claude Code 设置了 AUTO_BACKGROUND_MS = 120_000，即 2 分钟后自动后台化。"
+  }
+]

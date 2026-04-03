@@ -1,0 +1,74 @@
+<section class="module" id="module-19" data-module="Day 19: 成本与性能 — 成本追踪 · 启动优化 · Token预算">
+  <h2>Day 19: 成本与性能 — 成本追踪 · 启动优化 · Token 预算</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>AI Agent 的运行成本不可忽视——每次 API 调用都消耗 token 费用。本节解析 Claude Code 如何追踪成本、优化启动性能，以及利用 Prompt Cache 降低开销。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>实时成本追踪</h4>
+      <p>每次 API 调用后，系统记录输入/输出 token 数量并按模型定价计算费用。累计费用实时显示在终端状态栏中，让用户对当前会话的花费一目了然。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>并行预加载启动优化</h4>
+      <p>启动时使用 <code>Promise.all()</code> 并行加载配置、检查权限、初始化 API 客户端。配合动态 <code>import()</code>，首次交互延迟从数秒降至毫秒级。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Prompt Cache</h4>
+      <p>Claude API 支持 Prompt Cache：System Prompt 和消息前缀在多次调用之间可以被缓存，避免重复处理相同的 token，降低延迟和费用（缓存 token 费用约为原价的 10%）。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Prompt Cache 是 Claude Code 成本优化的最大杠杆——System Prompt 和对话历史在每轮都重复发送，缓存后只需支付首次的 token 费用。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 成本追踪实现简化版
+interface CostTracker {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  totalCost: number;
+}
+
+function updateCost(tracker: CostTracker, usage: ApiUsage): CostTracker {
+  const inputCost = usage.input_tokens * PRICE_PER_INPUT_TOKEN;
+  const outputCost = usage.output_tokens * PRICE_PER_OUTPUT_TOKEN;
+  // 缓存 token 费用约为原价的 10%
+  const cacheCost = usage.cache_read_tokens * PRICE_PER_INPUT_TOKEN * 0.1;
+
+  return {
+    inputTokens: tracker.inputTokens + usage.input_tokens,
+    outputTokens: tracker.outputTokens + usage.output_tokens,
+    cacheReadTokens: tracker.cacheReadTokens + usage.cache_read_tokens,
+    totalCost: tracker.totalCost + inputCost + outputCost + cacheCost,
+  };
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="并行加载优化启动速度，但不直接降低 API 调用成本。" data-explanation-1="上下文压缩减少 token 数量，但 Prompt Cache 的成本节约更直接和显著。" data-explanation-2="正确！Prompt Cache 让重复的 System Prompt 和消息历史只需首次付费，后续调用使用缓存 token（约原价 10%），是成本优化的最大杠杆。">
+    <p class="quiz-question">Claude Code 中哪个技术对降低 API 调用成本贡献最大？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">并行预加载</button>
+      <button class="quiz-option">上下文压缩</button>
+      <button class="quiz-option">Prompt Cache</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="记录每次 API 调用的输入/输出 token 数量并按定价计算累计费用的机制">成本追踪</span>，<span class="term" data-definition="Claude API 将重复的 System Prompt 和消息前缀缓存在服务端，减少重复处理的延迟和费用">Prompt Cache</span>，<span class="term" data-definition="为每次 API 调用设定的最大 token 消耗限制，防止单次调用失控">Token 预算</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-19-cost-and-performance.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

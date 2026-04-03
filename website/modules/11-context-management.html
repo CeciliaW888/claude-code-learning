@@ -1,0 +1,76 @@
+<section class="module" id="module-11" data-module="Day 11: 上下文管理 — System Prompt · CLAUDE.md · 记忆">
+  <h2>Day 11: 上下文管理 — System Prompt · CLAUDE.md · 记忆</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Claude Code 的行为不仅由模型决定，更由精心构建的上下文塑造。本节解析 System Prompt 的动态组装、CLAUDE.md 的多级加载，以及上下文如何影响模型行为。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>System Prompt 动态组装</h4>
+      <p>System Prompt 不是一个静态字符串，而是动态拼接而成：基础指令 + 工具描述 + CLAUDE.md 内容 + 当前环境信息（OS、shell、cwd 等）。每次对话都根据当前状态组装。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>CLAUDE.md 多级加载</h4>
+      <p>CLAUDE.md 从多个位置加载并按优先级合并：用户级（<code>~/.claude/CLAUDE.md</code>）→ 父目录级 → 项目级（<code>./CLAUDE.md</code>）。项目级优先级最高，可以覆盖用户级的通用设置。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>上下文收集</h4>
+      <p>除了 CLAUDE.md，上下文还包括：git 状态、当前分支、最近的 commit、项目文件结构等。这些信息帮助模型理解项目背景，做出更准确的决策。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> CLAUDE.md 是用户与模型之间的「契约」——你可以通过它告诉 Claude 项目的技术栈、编码规范、禁止事项等，让模型行为与团队要求一致。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// buildSystemPrompt 简化版
+function buildSystemPrompt(state: AppState): string {
+  const parts: string[] = [];
+
+  // 基础指令
+  parts.push(BASE_SYSTEM_PROMPT);
+
+  // 工具描述（告诉模型可以用哪些工具）
+  parts.push(formatToolDescriptions(state.tools));
+
+  // CLAUDE.md 多级加载（项目级优先）
+  const claudeMd = loadClaudeMd([
+    `${state.homedir}/.claude/CLAUDE.md`,    // 用户级
+    `${state.cwd}/../CLAUDE.md`,              // 父目录级
+    `${state.cwd}/CLAUDE.md`,                 // 项目级（最高优先）
+  ]);
+  parts.push(claudeMd);
+
+  // 环境信息
+  parts.push(`OS: ${state.os}, Shell: ${state.shell}, CWD: ${state.cwd}`);
+
+  return parts.join("\n\n");
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="用户级是最低优先级，提供通用默认设置。" data-explanation-1="父目录级介于用户级和项目级之间。" data-explanation-2="正确！项目级 CLAUDE.md（项目根目录）优先级最高，可以覆盖用户级的通用规则，确保项目特定的需求得到满足。">
+    <p class="quiz-question">CLAUDE.md 的哪个级别优先级最高？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">用户级（~/.claude/CLAUDE.md）</button>
+      <button class="quiz-option">父目录级</button>
+      <button class="quiz-option">项目级（./CLAUDE.md）</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="发送给 Claude API 的第一条消息，定义模型的角色、能力和行为规则">System Prompt</span>，<span class="term" data-definition="项目或用户级别的配置文件，包含给 Claude 的自定义指令和项目背景信息">CLAUDE.md</span>，<span class="term" data-definition="模型在当前对话中可以访问的所有信息总和，包括 System Prompt、历史消息和工具描述">上下文</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-11-context-management.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

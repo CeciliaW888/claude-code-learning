@@ -1,0 +1,67 @@
+<section class="module" id="module-5" data-module="Day 5: Tool 系统基础 — ToolDef · buildTool · 生命周期">
+  <h2>Day 5: Tool 系统基础 — ToolDef · buildTool · 生命周期</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Tool 系统是 Claude Code 的核心能力引擎——模型通过调用工具来读写文件、执行命令、搜索代码。本节深入解析工具的定义、构建和生命周期。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>ToolDef：统一接口</h4>
+      <p>每个工具都遵循 ToolDef 接口定义：<code>name</code> 标识工具，<code>description</code> 告诉 Claude 模型何时使用此工具，<code>inputSchema</code> 定义参数结构，<code>execute</code> 是实际执行逻辑。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>description 是给 Claude 看的</h4>
+      <p>工具的 <code>description</code> 不是给人看的文档，而是 prompt 的一部分——它告诉 Claude 模型什么场景该用这个工具、有什么限制、期望什么输入。写好 description 直接影响模型的工具选择准确度。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>inputSchema 定义参数</h4>
+      <p>使用 JSON Schema 格式定义工具的输入参数，包括类型、必填项、枚举值等。Claude 模型根据 schema 生成合法的工具调用参数。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Tool 的 description 本质上是 prompt engineering——好的描述让模型精准选择工具，差的描述导致模型误用或忽略工具。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// buildTool 工厂函数简化版
+function buildTool(config: ToolConfig): ToolDef {
+  return {
+    name: config.name,
+    description: config.description,  // 给 Claude 模型的使用说明
+    inputSchema: config.inputSchema,  // JSON Schema 参数定义
+    async execute(input) {
+      // 权限检查 → 参数验证 → 执行 → 返回结果
+      await checkPermission(config.name, input);
+      const validated = validateInput(config.inputSchema, input);
+      return config.handler(validated);
+    },
+  };
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="description 不是给开发者看的文档注释。" data-explanation-1="正确！description 是系统 prompt 的一部分，Claude 模型根据它决定何时以及如何使用这个工具。" data-explanation-2="description 不会显示在终端界面上给最终用户看。">
+    <p class="quiz-question">Tool 的 description 字段是给谁看的？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">给开发者看的代码注释</button>
+      <button class="quiz-option">给 Claude 模型看的，用于决策何时调用此工具</button>
+      <button class="quiz-option">给终端用户看的帮助信息</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="定义工具名称、描述、参数和执行逻辑的统一 TypeScript 类型接口">ToolDef</span>，<span class="term" data-definition="JSON 格式的参数定义规范，描述工具接受什么类型和结构的输入">inputSchema</span>，<span class="term" data-definition="工具从注册到执行再到返回结果的完整流程：注册→发现→调用→权限检查→执行→返回">Tool 生命周期</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-05-tool-system-basics.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(python -c \"from PIL import Image; print\\('pillow ok'\\)\")",
+      "Bash(python -c \"print\\('no pillow'\\)\")",
+      "Bash(cp \"C:/Users/cecil/.claude/skills/learning-to-course/assets/styles.css\" \"C:/Users/cecil/Repos/claude-code-learning/website/styles.css\")",
+      "Bash(cp \"C:/Users/cecil/.claude/skills/learning-to-course/assets/main.js\" \"C:/Users/cecil/Repos/claude-code-learning/website/main.js\")",
+      "Bash(cp \"C:/Users/cecil/.claude/skills/learning-to-course/assets/_footer.html\" \"C:/Users/cecil/Repos/claude-code-learning/website/_footer.html\")",
+      "Bash(cp \"C:/Users/cecil/.claude/skills/learning-to-course/scripts/build.sh\" \"C:/Users/cecil/Repos/claude-code-learning/website/build.sh\")",
+      "Bash(wc -l \"C:/Users/cecil/Repos/claude-code-learning/website/modules/\"*.html)",
+      "Bash(wc:*)",
+      "Bash(bash build.sh)"
+    ]
+  }
+}

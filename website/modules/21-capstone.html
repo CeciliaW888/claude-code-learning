@@ -1,0 +1,118 @@
+<section class="module" id="module-21" data-module="Day 21: 终极项目 — 构建你的 AI Agent CLI">
+  <h2>Day 21: 终极项目 — 构建你的 AI Agent CLI</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>21 天的学习汇聚于此——是时候把所有知识整合起来，构建一个完整的 AI Agent CLI。从入口到循环，从工具到安全，从上下文到成本，打造属于你自己的编程助手。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>21 天知识整合</h4>
+      <p>架构设计（Week 1）→ 核心机制（Week 2）→ 高级特性（Week 3）。从宏观理解到微观实现，从单 Agent 到多 Agent，你已经掌握了构建 AI Agent 的完整知识体系。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>完整项目结构</h4>
+      <p>一个完整的 Agent CLI 需要：CLI 入口（Day 2）、REPL 交互（Day 4）、Agent 循环（Day 10）、Tool 系统（Day 5/8/9）、权限管理（Day 15）、上下文管理（Day 11/12）和成本追踪（Day 19）。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>核心代码实现</h4>
+      <p>最终项目将这些模块串联：入口解析参数 → 初始化状态 → 启动 REPL → 用户输入进入 Agent 循环 → 循环中调用工具 → 权限检查 → 执行 → 返回结果 → 追踪成本。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 一个好的 AI Agent 不在于功能多少，而在于核心循环的健壮性——输入处理、API 调用、工具执行、错误恢复的每一步都要可靠。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 完整 Agent CLI 入口 + 循环 + REPL
+import Anthropic from "@anthropic-ai/sdk";
+import * as readline from "readline";
+
+const client = new Anthropic();
+
+// 工具定义
+const tools = [
+  { name: "ReadFile", /* ... */ },
+  { name: "WriteFile", /* ... */ },
+  { name: "Bash", /* ... */ },
+];
+
+// Agent 循环
+async function agentLoop(messages: Message[]) {
+  const costTracker = { totalCost: 0 };
+
+  while (true) {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8192,
+      system: buildSystemPrompt(),  // Day 11: 上下文管理
+      messages,
+      tools,
+    });
+
+    // Day 19: 成本追踪
+    updateCost(costTracker, response.usage);
+
+    if (response.stop_reason === "end_turn") {
+      console.log(extractText(response));
+      break;
+    }
+
+    // Day 5/8/9: 工具执行
+    messages.push({ role: "assistant", content: response.content });
+    const results = [];
+    for (const block of response.content) {
+      if (block.type === "tool_use") {
+        // Day 15: 权限检查
+        await checkPermission(block.name, block.input);
+        const result = await executeTool(block);
+        results.push({ type: "tool_result", tool_use_id: block.id, content: result });
+      }
+    }
+    messages.push({ role: "user", content: results });
+  }
+
+  console.log(`\n总成本: $${costTracker.totalCost.toFixed(4)}`);
+}
+
+// REPL 交互循环
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const messages: Message[] = [];
+
+function prompt() {
+  rl.question("You&gt; ", async (input) =&gt; {
+    if (input === "/quit") { rl.close(); return; }
+    messages.push({ role: "user", content: input });
+    await agentLoop(messages);
+    prompt();  // 继续等待下一轮输入
+  });
+}
+
+prompt();</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="功能多少不是核心，一个只有 3 个工具但循环健壮的 Agent 远好于有 30 个工具但会崩溃的 Agent。" data-explanation-1="正确！Agent 的核心循环（输入→API→工具→结果）的健壮性决定了整个系统的可靠性。错误恢复、权限检查、成本控制都围绕这个循环展开。" data-explanation-2="UI 是表现层的事，一个好的 Agent 即使没有精美 UI 也能可靠工作。">
+    <p class="quiz-question">构建一个好的 AI Agent，最重要的是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">支持尽可能多的工具</button>
+      <button class="quiz-option">核心循环的健壮性和可靠性</button>
+      <button class="quiz-option">精美的终端 UI</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="将 21 天学习的所有模块（入口、REPL、工具、权限、上下文、成本）整合成完整可运行的 CLI 工具">终极项目</span>，<span class="term" data-definition="Agent 的核心 while(true) 循环能正确处理各种异常情况（网络错误、工具失败、权限拒绝等）并优雅恢复">健壮性</span>，<span class="term" data-definition="从宏观架构到微观实现的完整理解，能独立设计和构建 AI Agent 系统">知识体系</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-21-capstone.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

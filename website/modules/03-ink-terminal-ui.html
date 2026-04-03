@@ -1,0 +1,64 @@
+<section class="module" id="module-3" data-module="Day 3: 终端 UI (Ink) — React for CLI · Box/Text · Provider">
+  <h2>Day 3: 终端 UI (Ink) — React for CLI · Box/Text · Provider</h2>
+  <p class="module-meta">🟢 入门 · 预计时间: 1小时</p>
+
+  <p>Claude Code 的终端界面并非普通的文本输出——它使用 Ink 框架，将 React 的组件化开发模式带入终端。本节解析 Ink 如何将 React 组件渲染为终端文本。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>Ink：React for CLI</h4>
+      <p>Ink 是一个用 React 编写终端应用的框架。你可以用 JSX 编写组件、使用 useState/useEffect 等 Hooks，Ink 负责将虚拟 DOM 渲染为终端中的 ANSI 文本。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>Box = div, Text = span</h4>
+      <p><code>&lt;Box&gt;</code> 是 Ink 的容器组件，类似 HTML 的 <code>&lt;div&gt;</code>，支持 Flexbox 布局。<code>&lt;Text&gt;</code> 是文本组件，类似 <code>&lt;span&gt;</code>，支持颜色和样式设置。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Flexbox 布局</h4>
+      <p>Ink 支持 Flexbox 的核心属性：<code>flexDirection</code>、<code>justifyContent</code>、<code>alignItems</code>、<code>padding</code> 等。终端 UI 的布局方式与 Web 开发如出一辙。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 选择 Ink 而非传统终端库（如 blessed），让 Claude Code 团队可以复用 React 生态的组件模式和状态管理，大幅降低 UI 开发复杂度。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 简单的 Ink 终端 UI 组件
+import { Box, Text } from "ink";
+
+function StatusBar({ model, cost }: Props) {
+  return (
+    &lt;Box flexDirection="row" justifyContent="space-between"&gt;
+      &lt;Text color="cyan"&gt;Model: {model}&lt;/Text&gt;
+      &lt;Text color="yellow"&gt;Cost: ${cost.toFixed(4)}&lt;/Text&gt;
+    &lt;/Box&gt;
+  );
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="Box 不是 span，span 对应的是 Ink 的 Text 组件。" data-explanation-1="正确！Ink 的 Box 是容器组件，功能和 HTML 的 div 一样，支持 Flexbox 布局。" data-explanation-2="Box 不是 table，它是通用的布局容器。">
+    <p class="quiz-question">Ink 中的 Box 组件相当于 HTML 的什么元素？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">span</button>
+      <button class="quiz-option">div</button>
+      <button class="quiz-option">table</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="一个用 React 组件模型构建终端 UI 的框架，将 JSX 渲染为 ANSI 文本">Ink</span>，<span class="term" data-definition="CSS 的弹性盒布局模型，Ink 在终端中同样支持此布局方式">Flexbox</span>，<span class="term" data-definition="React 的上下文提供者，用于在组件树中共享全局状态而不需要逐层传递 props">Provider</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-03-ink-terminal-ui.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

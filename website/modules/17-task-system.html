@@ -1,0 +1,78 @@
+<section class="module" id="module-17" data-module="Day 17: 任务系统 — 前台/后台 · 进度追踪 · 并行">
+  <h2>Day 17: 任务系统 — 前台/后台 · 进度追踪 · 并行</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>复杂的编程任务往往需要同时进行多个操作。Claude Code 的任务系统管理前台和后台任务的生命周期，支持并行执行和进度追踪。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>前台任务：可见可中断</h4>
+      <p>前台任务的输出实时显示在终端中，用户可以看到执行进度并随时中断（Ctrl+C）。典型前台任务包括文件编辑、代码生成等需要用户关注的操作。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>后台任务：静默通知</h4>
+      <p>后台任务在不打扰用户的情况下静默执行。完成后通过通知告知用户结果。长时间运行的工具调用、子 Agent 超时后的任务都会转入后台。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>并行执行</h4>
+      <p>当模型在一次响应中请求多个 tool_use 时，如果工具之间没有依赖关系，系统会使用 <code>Promise.all()</code> 并行执行，显著提升效率。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 前台/后台的切换不是全有或全无——一个任务可以从前台开始（让用户看到初始进展），超时后自动转后台（不阻塞交互）。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// Task 接口定义
+interface Task {
+  id: string;
+  type: "foreground" | "background";
+  status: "running" | "completed" | "failed" | "cancelled";
+  progress?: number;        // 0-100 进度百分比
+  result?: ToolResult;
+  startedAt: number;
+  completedAt?: number;
+}
+
+// 并行执行多个工具
+async function executeToolsInParallel(
+  toolUseBlocks: ToolUseBlock[]
+): Promise&lt;ToolResult[]&gt; {
+  return Promise.all(
+    toolUseBlocks.map(block =&gt; {
+      const tool = findTool(block.name);
+      const task = createTask(block, "foreground");
+      return tool.execute(block.input)
+        .then(result =&gt; { task.status = "completed"; return result; })
+        .catch(err =&gt; { task.status = "failed"; return { error: err.message }; });
+    })
+  );
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="0" data-explanation-0="正确！前台任务的输出实时显示在终端中，用户可以看到进度并通过 Ctrl+C 随时中断执行。" data-explanation-1="后台任务才是静默执行的，前台任务对用户可见。" data-explanation-2="前台任务不一定优先级更高，它只是对用户可见。">
+    <p class="quiz-question">前台任务和后台任务的核心区别是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">前台任务输出可见，用户可中断</button>
+      <button class="quiz-option">前台任务运行更快</button>
+      <button class="quiz-option">前台任务优先级更高</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="输出实时显示在终端、用户可以看到进度并中断的任务类型">前台任务</span>，<span class="term" data-definition="在后台静默执行、完成后通知用户的任务类型">后台任务</span>，<span class="term" data-definition="使用 Promise.all() 同时执行多个独立工具调用，提升效率">并行执行</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-17-task-system.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

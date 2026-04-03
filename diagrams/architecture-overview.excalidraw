@@ -1,0 +1,40 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "claude-code-learning",
+  "elements": [
+    {
+      "type": "rectangle",
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 80,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "fillStyle": "solid",
+      "label": { "text": "表现层 (Presentation)\nInk + React Components" }
+    },
+    {
+      "type": "rectangle",
+      "x": 100,
+      "y": 150,
+      "width": 400,
+      "height": 80,
+      "backgroundColor": "#b2f2bb",
+      "strokeColor": "#2f9e44",
+      "fillStyle": "solid",
+      "label": { "text": "核心层 (Core)\nQueryEngine + query() + Tool System" }
+    },
+    {
+      "type": "rectangle",
+      "x": 100,
+      "y": 250,
+      "width": 400,
+      "height": 80,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "fillStyle": "solid",
+      "label": { "text": "服务层 (Service)\nAPI + MCP + Security + Compact" }
+    }
+  ]
+}

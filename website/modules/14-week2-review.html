@@ -1,0 +1,83 @@
+<section class="module" id="module-14" data-module="Day 14: 第二周回顾 — 知识图谱 · 功能完整Agent">
+  <h2>Day 14: 第二周回顾 — 知识图谱 · 功能完整 Agent</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>第二周我们深入了 Claude Code 的核心机制：从工具实现到 Agent 循环，从上下文管理到压缩策略。本节通过知识图谱串联所学，并构建一个带工具的完整 Agent CLI。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>Week 2 六天知识总结</h4>
+      <p>Day 8 BashTool 安全 → Day 9 文件工具 → Day 10 Agent 循环 → Day 11 上下文管理 → Day 12 上下文压缩 → Day 13 子 Agent。这些组成了 Claude Code 的核心运行时。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>知识连接</h4>
+      <p>Agent 循环（Day 10）调用 BashTool（Day 8）和文件工具（Day 9），通过上下文管理（Day 11）构建 prompt，用压缩（Day 12）控制 token 预算，复杂任务交给子 Agent（Day 13）。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>中级项目：带工具的 Agent CLI</h4>
+      <p>在 Week 1 的 Mini Agent 基础上，加入文件读写工具、Bash 命令执行和基础安全检查，构建一个功能更完整的 Agent CLI。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Week 2 的核心学习是「工具赋予 Agent 能力，安全限制 Agent 行为」——能力和约束是 Agent 设计的两面。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 带工具的 Agent CLI 框架
+const tools: ToolDef[] = [
+  {
+    name: "ReadFile",
+    description: "读取指定文件的内容",
+    inputSchema: { type: "object", properties: {
+      path: { type: "string" }
+    }, required: ["path"] },
+    execute: async ({ path }) =&gt; ({
+      output: await fs.readFile(path, "utf-8"),
+    }),
+  },
+  {
+    name: "Bash",
+    description: "执行 shell 命令（只读命令自动放行）",
+    inputSchema: { type: "object", properties: {
+      command: { type: "string" }
+    }, required: ["command"] },
+    execute: async ({ command }) =&gt; {
+      if (!isReadOnly(command)) {
+        const ok = await confirm(`执行: ${command}?`);
+        if (!ok) return { error: "用户拒绝" };
+      }
+      return { output: execSync(command).toString() };
+    },
+  },
+];
+
+// 使用 Week 1 的 agentLoop，传入工具列表
+await agentLoop(userInput, tools);</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="更多工具增加能力但不自动保证安全性。" data-explanation-1="更快的 API 是性能优化，不是设计核心。" data-explanation-2="正确！Agent 设计的核心矛盾是能力（工具赋予）与约束（安全限制）的平衡——太多约束限制能力，太少约束带来风险。">
+    <p class="quiz-question">Agent 设计中最核心的平衡是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">更多工具 vs 更少工具</button>
+      <button class="quiz-option">更快的 API vs 更准确的响应</button>
+      <button class="quiz-option">能力（工具）与约束（安全）的平衡</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="只读命令（如 ls、cat）自动放行，写入命令需要用户确认的安全策略">只读白名单</span>，<span class="term" data-definition="将 Week 1 和 Week 2 的知识整合，构建具备文件操作和命令执行能力的 CLI 工具">功能完整 Agent</span>，<span class="term" data-definition="工具提供能力、安全提供约束，两者共同塑造 Agent 的行为边界">能力-约束平衡</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-14-week2-review.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

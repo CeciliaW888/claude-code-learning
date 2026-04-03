@@ -1,0 +1,77 @@
+<section class="module" id="module-16" data-module="Day 16: MCP 协议集成 — Model Context Protocol · 工具发现">
+  <h2>Day 16: MCP 协议集成 — Model Context Protocol · 工具发现</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>MCP（Model Context Protocol）是 Anthropic 提出的开放协议，让 AI 应用以标准化方式连接外部工具和数据源。本节解析 Claude Code 如何集成 MCP，实现动态工具扩展。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>MCP 三种能力：Tools / Resources / Prompts</h4>
+      <p><strong>Tools</strong>：可执行的操作（如查询数据库、发送邮件）；<strong>Resources</strong>：可读取的数据源（如文件、API 响应）；<strong>Prompts</strong>：预定义的 prompt 模板。三种能力覆盖了 AI 与外部世界交互的主要场景。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>Server / Client 架构</h4>
+      <p>MCP Server 提供能力（工具/资源/提示），MCP Client（Claude Code）发现并调用这些能力。通信使用 JSON-RPC 协议，支持 stdio 和 HTTP 两种传输方式。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>动态工具注册</h4>
+      <p>Claude Code 启动时连接配置的 MCP Server，获取其提供的工具列表，并将这些工具动态注册到 Tool 系统中。模型看到的工具列表会包含 MCP 提供的外部工具。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> MCP 让 Claude Code 的能力变成「可插拔」的——你不需要修改 Claude Code 源码，只需编写 MCP Server 就能让它连接新的数据源和工具。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// MCP Server 示例：提供一个查询数据库的工具
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+
+const server = new McpServer({
+  name: "database-tools",
+  version: "1.0.0",
+});
+
+// 注册一个工具
+server.tool(
+  "query_database",
+  "执行 SQL 查询并返回结果",
+  { sql: z.string().describe("要执行的 SQL 查询语句") },
+  async ({ sql }) =&gt; {
+    const result = await db.query(sql);
+    return { content: [{ type: "text", text: JSON.stringify(result) }] };
+  }
+);
+
+// 启动 Server
+const transport = new StdioServerTransport();
+await server.connect(transport);</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="MCP 不止提供 Tools，还有 Resources 和 Prompts。" data-explanation-1="MCP 不止提供 Resources 和 Prompts，还有 Tools。" data-explanation-2="正确！MCP 定义了三种能力：Tools（可执行操作）、Resources（可读数据）和 Prompts（提示模板），覆盖 AI 与外部系统交互的主要场景。">
+    <p class="quiz-question">MCP 协议定义了哪三种能力？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">Read / Write / Execute</button>
+      <button class="quiz-option">Input / Output / Storage</button>
+      <button class="quiz-option">Tools / Resources / Prompts</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="Model Context Protocol，Anthropic 提出的开放协议，标准化 AI 应用与外部工具/数据源的连接方式">MCP</span>，<span class="term" data-definition="提供工具、资源或提示能力的服务端程序，Claude Code 作为 Client 连接它">MCP Server</span>，<span class="term" data-definition="Claude Code 启动时从 MCP Server 获取工具列表并加入 Tool 系统的过程">动态工具注册</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-16-mcp-integration.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

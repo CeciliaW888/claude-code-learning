@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code 源码解析 — 21天学习路径</title>
+  <meta name="description" content="21天从零构建 AI Agent CLI 工具 — 基于 Claude Code 真实源码的深度解析课程">
+  <meta name="theme-color" content="#c4825a">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CC源码课">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    :root {
+      --color-accent: #c4825a;
+      --color-accent-hover: #b07149;
+      --color-accent-light: rgba(196,130,90,0.12);
+      --color-accent-muted: rgba(196,130,90,0.06);
+      --font-heading: 'Noto Serif SC', Georgia, serif;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main" class="skip-link">跳到主要内容</a>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">Claude Code 源码解析</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="Day 1: 架构总览" role="tab">1</button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="Day 2: 入口与启动" role="tab">2</button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="Day 3: 终端 UI" role="tab">3</button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="Day 4: REPL 与输入" role="tab">4</button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="Day 5: Tool 系统" role="tab">5</button>
+        <button class="nav-dot" data-target="module-6" data-tooltip="Day 6: 消息类型" role="tab">6</button>
+        <button class="nav-dot" data-target="module-7" data-tooltip="Day 7: 第一周回顾" role="tab">7</button>
+        <button class="nav-dot" data-target="module-8" data-tooltip="Day 8: BashTool" role="tab">8</button>
+        <button class="nav-dot" data-target="module-9" data-tooltip="Day 9: 文件工具" role="tab">9</button>
+        <button class="nav-dot" data-target="module-10" data-tooltip="Day 10: Agent 循环" role="tab">10</button>
+        <button class="nav-dot" data-target="module-11" data-tooltip="Day 11: 上下文管理" role="tab">11</button>
+        <button class="nav-dot" data-target="module-12" data-tooltip="Day 12: 上下文压缩" role="tab">12</button>
+        <button class="nav-dot" data-target="module-13" data-tooltip="Day 13: 子 Agent" role="tab">13</button>
+        <button class="nav-dot" data-target="module-14" data-tooltip="Day 14: 第二周回顾" role="tab">14</button>
+        <button class="nav-dot" data-target="module-15" data-tooltip="Day 15: 权限系统" role="tab">15</button>
+        <button class="nav-dot" data-target="module-16" data-tooltip="Day 16: MCP 集成" role="tab">16</button>
+        <button class="nav-dot" data-target="module-17" data-tooltip="Day 17: 任务系统" role="tab">17</button>
+        <button class="nav-dot" data-target="module-18" data-tooltip="Day 18: 状态管理" role="tab">18</button>
+        <button class="nav-dot" data-target="module-19" data-tooltip="Day 19: 成本与性能" role="tab">19</button>
+        <button class="nav-dot" data-target="module-20" data-tooltip="Day 20: 多 Agent" role="tab">20</button>
+        <button class="nav-dot" data-target="module-21" data-tooltip="Day 21: 终极项目" role="tab">21</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Install Banner (PWA) -->
+  <div class="install-banner" id="install-banner" style="display:none;">
+    <p>📱 安装此课程到主屏幕，支持离线学习</p>
+    <button class="install-btn" id="install-btn">安装</button>
+    <button class="install-dismiss" id="install-dismiss">✕</button>
+  </div>
+
+  <main id="main">
+    <!-- Module/day content inserted by build.sh -->

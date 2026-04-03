@@ -1,0 +1,87 @@
+<section class="module" id="module-18" data-module="Day 18: 状态管理 — AppState · Provider · 会话恢复">
+  <h2>Day 18: 状态管理 — AppState · Provider · 会话恢复</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Claude Code 使用 React 的状态管理模式来管理整个应用的状态。本节解析 AppState 的设计、Context Provider 的层级结构，以及会话如何持久化和恢复。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>React Context Provider</h4>
+      <p>AppState 通过 React Context API 在组件树中共享。顶层 Provider 包裹整个应用，任何子组件都可以通过 <code>useAppState()</code> Hook 访问和更新全局状态。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>不可变更新</h4>
+      <p>状态更新遵循 React 的不可变原则：不直接修改 state 对象，而是创建新对象。这确保 React 能正确检测变化并触发重新渲染。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>会话持久化与恢复</h4>
+      <p>对话历史和状态会被序列化保存到磁盘。用户可以通过 <code>claude --resume</code> 恢复之前的会话，包括完整的消息历史和上下文。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Claude Code 在终端中使用了 Web 开发的状态管理模式（React Context + 不可变更新），这得益于 Ink 框架让终端 UI 也能享受 React 生态。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// AppState 与 useAppState 简化版
+interface AppState {
+  messages: Message[];
+  tools: ToolDef[];
+  permissionMode: PermissionMode;
+  model: string;
+  totalCost: number;
+  sessionId: string;
+}
+
+const AppStateContext = React.createContext&lt;AppState&gt;(null!);
+
+function AppStateProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState&lt;AppState&gt;(initialState);
+
+  // 不可变更新：添加消息
+  const addMessage = (msg: Message) =&gt; {
+    setState(prev =&gt; ({
+      ...prev,
+      messages: [...prev.messages, msg],
+    }));
+  };
+
+  return (
+    &lt;AppStateContext.Provider value={{ ...state, addMessage }}&gt;
+      {children}
+    &lt;/AppStateContext.Provider&gt;
+  );
+}
+
+// 任何组件都可以访问状态
+function useAppState() {
+  return useContext(AppStateContext);
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="直接修改状态会导致 React 无法检测变化，不会触发重新渲染。" data-explanation-1="正确！不可变更新（创建新对象而非直接修改）让 React 能通过引用比较检测到状态变化，正确触发重新渲染。" data-explanation-2="深拷贝性能开销太大，不可变更新使用浅拷贝（展开运算符）更高效。">
+    <p class="quiz-question">为什么状态更新要使用不可变方式？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">为了减少内存使用</button>
+      <button class="quiz-option">让 React 能正确检测变化并触发重新渲染</button>
+      <button class="quiz-option">为了支持深拷贝</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="保存应用所有运行时状态的核心数据结构，包括消息、工具、权限和会话信息">AppState</span>，<span class="term" data-definition="React Context API 的状态共享组件，让子组件无需逐层传递 props 即可访问全局状态">Provider</span>，<span class="term" data-definition="将对话历史序列化到磁盘并在下次启动时恢复的机制">会话恢复</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-18-state-management.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

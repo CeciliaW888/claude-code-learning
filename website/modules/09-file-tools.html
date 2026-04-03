@@ -1,0 +1,72 @@
+<section class="module" id="module-9" data-module="Day 9: 文件工具 — Read/Write/Edit · Diff显示">
+  <h2>Day 9: 文件工具 — Read/Write/Edit · Diff 显示</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>文件操作是 Claude Code 最常用的能力。三种文件工具各有定位：Read 读取、Write 整体写入、Edit 精确修改。本节解析它们的设计理念和核心实现。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>三种文件工具各有定位</h4>
+      <p><code>FileRead</code> 读取文件内容并附带行号；<code>FileWrite</code> 创建或完整覆写文件；<code>FileEdit</code> 使用 old_str/new_str 精确替换文件中的指定内容，无需重写整个文件。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>FileEdit 用 old_str/new_str 精确编辑</h4>
+      <p>FileEdit 不使用行号定位（因为行号在编辑过程中会偏移），而是用文本匹配：提供要替换的原始文本（old_str）和替换后的新文本（new_str），精确且不受其他编辑影响。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Diff 显示与行号标记</h4>
+      <p>编辑完成后，终端会以 diff 格式高亮显示变更内容（红色删除、绿色新增），让用户一目了然地看到修改了什么。FileRead 输出时附带行号，方便引用。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> FileEdit 选择文本匹配而非行号定位是一个深思熟虑的设计——当模型在同一轮对话中多次编辑文件，前面的编辑会改变后续的行号，但文本匹配不受影响。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// FileEditTool 核心逻辑简化版
+async function fileEdit(input: {
+  file_path: string;
+  old_str: string;
+  new_str: string;
+}): Promise&lt;ToolResult&gt; {
+  const content = await readFile(input.file_path, "utf-8");
+
+  // 确保 old_str 在文件中唯一匹配
+  const matchCount = countOccurrences(content, input.old_str);
+  if (matchCount === 0) throw new Error("old_str 未找到");
+  if (matchCount > 1) throw new Error("old_str 匹配多处，请提供更多上下文");
+
+  // 执行替换
+  const newContent = content.replace(input.old_str, input.new_str);
+  await writeFile(input.file_path, newContent);
+
+  return { output: generateDiff(content, newContent) };
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="行号在多次编辑后会偏移，导致后续编辑指向错误位置。" data-explanation-1="正确！文本匹配（old_str/new_str）不受其他编辑导致的行号偏移影响，多次编辑仍然精确。" data-explanation-2="正则可以匹配，但不够直观，且模型更擅长生成精确文本而非正则表达式。">
+    <p class="quiz-question">为什么 FileEdit 使用文本匹配而不是行号定位？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">行号更难解析</button>
+      <button class="quiz-option">行号在多次编辑后会偏移，文本匹配更稳定</button>
+      <button class="quiz-option">行号占用更多 token</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="通过精确匹配原始文本并替换为新文本的文件编辑方式，不依赖行号">文本匹配编辑</span>，<span class="term" data-definition="以红色（删除）和绿色（新增）高亮显示文件变更的格式">Diff 显示</span>，<span class="term" data-definition="FileEdit 要求 old_str 在文件中只出现一次，避免意外修改错误位置">唯一匹配约束</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-09-file-tools.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" font-family="Inter, -apple-system, sans-serif" font-size="14">
+  <!-- Title -->
+  <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#2d2d2d">Claude Code 三层架构</text>
+  <!-- Layer 1: Presentation -->
+  <rect x="50" y="55" width="500" height="90" rx="12" fill="#e8f5e9" stroke="#4a7c59" stroke-width="2"/>
+  <text x="300" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#2e7d32">表现层 Presentation Layer</text>
+  <text x="300" y="100" text-anchor="middle" font-size="12" fill="#4a7c59">Ink (React for CLI) · 终端交互 · 消息渲染</text>
+  <text x="300" y="118" text-anchor="middle" font-size="11" fill="#6b6b6b" font-style="italic">screens/REPL.tsx · components/ · PromptInput/</text>
+  <!-- Arrow -->
+  <text x="300" y="160" text-anchor="middle" font-size="20" fill="#c4825a">⬇ ⬆</text>
+  <!-- Layer 2: Core -->
+  <rect x="50" y="170" width="500" height="90" rx="12" fill="#fff8e1" stroke="#f57f17" stroke-width="2"/>
+  <text x="300" y="195" text-anchor="middle" font-size="16" font-weight="700" fill="#e65100">核心层 Core Layer</text>
+  <text x="300" y="215" text-anchor="middle" font-size="12" fill="#f57f17">Agent 循环 · Tool 系统 · 上下文管理</text>
+  <text x="300" y="233" text-anchor="middle" font-size="11" fill="#6b6b6b" font-style="italic">QueryEngine.ts · query.ts · tools.ts · Tool.ts</text>
+  <!-- Arrow -->
+  <text x="300" y="275" text-anchor="middle" font-size="20" fill="#c4825a">⬇ ⬆</text>
+  <!-- Layer 3: Service -->
+  <rect x="50" y="285" width="500" height="90" rx="12" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
+  <text x="300" y="310" text-anchor="middle" font-size="16" font-weight="700" fill="#b71c1c">服务层 Service Layer</text>
+  <text x="300" y="330" text-anchor="middle" font-size="12" fill="#c62828">API 调用 · MCP 协议 · 安全控制 · 持久化</text>
+  <text x="300" y="348" text-anchor="middle" font-size="11" fill="#6b6b6b" font-style="italic">services/ · state/ · permissions/ · utils/</text>
+</svg>

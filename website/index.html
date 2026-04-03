@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code 源码解析 — 21天学习路径</title>
+  <meta name="description" content="21天从零构建 AI Agent CLI 工具 — 基于 Claude Code 真实源码的深度解析课程">
+  <meta name="theme-color" content="#c4825a">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CC源码课">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    :root {
+      --color-accent: #c4825a;
+      --color-accent-hover: #b07149;
+      --color-accent-light: rgba(196,130,90,0.12);
+      --color-accent-muted: rgba(196,130,90,0.06);
+      --font-heading: 'Noto Serif SC', Georgia, serif;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main" class="skip-link">跳到主要内容</a>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">Claude Code 源码解析</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="Day 1: 架构总览" role="tab">1</button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="Day 2: 入口与启动" role="tab">2</button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="Day 3: 终端 UI" role="tab">3</button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="Day 4: REPL 与输入" role="tab">4</button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="Day 5: Tool 系统" role="tab">5</button>
+        <button class="nav-dot" data-target="module-6" data-tooltip="Day 6: 消息类型" role="tab">6</button>
+        <button class="nav-dot" data-target="module-7" data-tooltip="Day 7: 第一周回顾" role="tab">7</button>
+        <button class="nav-dot" data-target="module-8" data-tooltip="Day 8: BashTool" role="tab">8</button>
+        <button class="nav-dot" data-target="module-9" data-tooltip="Day 9: 文件工具" role="tab">9</button>
+        <button class="nav-dot" data-target="module-10" data-tooltip="Day 10: Agent 循环" role="tab">10</button>
+        <button class="nav-dot" data-target="module-11" data-tooltip="Day 11: 上下文管理" role="tab">11</button>
+        <button class="nav-dot" data-target="module-12" data-tooltip="Day 12: 上下文压缩" role="tab">12</button>
+        <button class="nav-dot" data-target="module-13" data-tooltip="Day 13: 子 Agent" role="tab">13</button>
+        <button class="nav-dot" data-target="module-14" data-tooltip="Day 14: 第二周回顾" role="tab">14</button>
+        <button class="nav-dot" data-target="module-15" data-tooltip="Day 15: 权限系统" role="tab">15</button>
+        <button class="nav-dot" data-target="module-16" data-tooltip="Day 16: MCP 集成" role="tab">16</button>
+        <button class="nav-dot" data-target="module-17" data-tooltip="Day 17: 任务系统" role="tab">17</button>
+        <button class="nav-dot" data-target="module-18" data-tooltip="Day 18: 状态管理" role="tab">18</button>
+        <button class="nav-dot" data-target="module-19" data-tooltip="Day 19: 成本与性能" role="tab">19</button>
+        <button class="nav-dot" data-target="module-20" data-tooltip="Day 20: 多 Agent" role="tab">20</button>
+        <button class="nav-dot" data-target="module-21" data-tooltip="Day 21: 终极项目" role="tab">21</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Install Banner (PWA) -->
+  <div class="install-banner" id="install-banner" style="display:none;">
+    <p>📱 安装此课程到主屏幕，支持离线学习</p>
+    <button class="install-btn" id="install-btn">安装</button>
+    <button class="install-dismiss" id="install-dismiss">✕</button>
+  </div>
+
+  <main id="main">
+    <!-- Module/day content inserted by build.sh -->
+<section class="module" id="module-1" data-module="Day 1: 架构总览 — 三层架构 · Tool 系统 · Agent 循环">
+  <h2>Day 1: 架构总览 — 三层架构 · Tool 系统 · Agent 循环</h2>
+  <p class="module-meta">🟢 入门 · 预计时间: 1小时</p>
+
+  <p>Claude Code 是一个基于终端的 AI 编程助手，理解其架构是深入学习的第一步。本节从宏观视角解析三层架构、Tool 系统和 Agent 循环的核心设计。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>三层架构：表现层 / 核心层 / 服务层</h4>
+      <p>表现层负责终端 UI（Ink/React），核心层包含 Agent 循环与 Tool 调度，服务层对接 Claude API 和文件系统等外部资源。三层各司其职，通过清晰的接口解耦。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>Agent 循环：感知 → 思考 → 行动</h4>
+      <p>Agent 循环是 Claude Code 的心脏。每一轮对话都经历：接收用户输入（感知）、调用 Claude API 推理（思考）、执行 Tool 操作（行动），然后将结果反馈给模型继续循环。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>30+ Tool 统一接口</h4>
+      <p>所有工具（BashTool、FileRead、FileWrite 等）都实现统一的 ToolDef 接口，包括名称、描述、参数 schema 和执行函数。这使得新增工具只需实现一个接口。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Claude Code 的架构本质上是一个「Tool-Augmented LLM Agent」——模型决定调用哪个工具，工具执行后将结果返回模型，形成闭环。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// Tool 统一接口定义
+type ToolDef = {
+  name: string;              // 工具名称，如 "Bash"
+  description: string;       // 给 Claude 模型看的描述
+  inputSchema: JSONSchema;   // 参数定义
+  execute: (input: unknown) => Promise&lt;ToolResult&gt;;
+};</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="Claude Code 不是两层架构，它有明确的表现层、核心层和服务层三层分离。" data-explanation-1="正确！三层架构分别是表现层（终端 UI）、核心层（Agent 循环）和服务层（API/文件系统）。" data-explanation-2="四层架构不准确，Claude Code 采用经典的三层设计。">
+    <p class="quiz-question">Claude Code 的架构分为几层？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">2 层（前端 + 后端）</button>
+      <button class="quiz-option">3 层（表现层 / 核心层 / 服务层）</button>
+      <button class="quiz-option">4 层（UI / 逻辑 / 数据 / 网络）</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="将系统分为表现层、核心层和服务层的设计模式，各层职责分离">三层架构</span>，<span class="term" data-definition="AI Agent 不断循环执行感知→思考→行动的核心流程">Agent 循环</span>，<span class="term" data-definition="定义工具名称、描述、参数和执行逻辑的统一 TypeScript 类型">ToolDef</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-01-architecture-overview.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-2" data-module="Day 2: 入口与启动 — CLI 解析 · 并行预加载 · 状态初始化">
+  <h2>Day 2: 入口与启动 — CLI 解析 · 并行预加载 · 状态初始化</h2>
+  <p class="module-meta">🟢 入门 · 预计时间: 1小时</p>
+
+  <p>当你在终端输入 <code>claude</code> 命令时，背后发生了什么？本节解析从 CLI 入口到完成初始化的完整启动流程，揭示启动性能优化的关键技巧。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>Commander.js 参数解析</h4>
+      <p>入口文件使用 Commander.js 解析命令行参数（如 <code>--model</code>、<code>--print</code>），将用户的 CLI 输入转化为结构化的配置对象。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>并行预加载优化启动</h4>
+      <p>启动时使用 <code>Promise.all()</code> 并行加载配置文件、检查权限、初始化 API 客户端等任务，而非串行执行，显著减少启动时间。关键模块使用动态 <code>import()</code> 延迟加载。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>State 对象管理会话</h4>
+      <p>初始化完成后创建全局 State 对象，包含当前会话的所有状态：消息历史、工具配置、权限设置等。State 贯穿整个应用生命周期。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 动态 <code>import()</code> 是启动优化的核心策略——只在需要时才加载模块，避免启动时加载全部 30+ 个工具的开销。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// CLI 入口简化版 (main.tsx)
+import { Command } from "commander";
+
+const program = new Command()
+  .name("claude")
+  .option("-p, --print", "非交互模式，直接输出")
+  .option("--model &lt;model&gt;", "指定模型")
+  .parse(process.argv);
+
+// 并行预加载关键资源
+const [config, permissions, apiClient] = await Promise.all([
+  loadConfig(),
+  checkPermissions(),
+  initApiClient(),
+]);</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="代码压缩是打包优化，不是运行时启动优化。" data-explanation-1="缓存有助于后续启动，但不是首次启动的主要优化手段。" data-explanation-2="正确！动态 import() 让非必要模块在需要时才加载，大幅减少首次启动的模块解析时间。">
+    <p class="quiz-question">Claude Code 为什么在启动时使用动态 import()？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">为了压缩代码体积</button>
+      <button class="quiz-option">为了缓存模块</button>
+      <button class="quiz-option">为了减少启动时间，按需加载</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="Node.js 的 CLI 参数解析库，将命令行参数转化为结构化选项">Commander.js</span>，<span class="term" data-definition="ES Module 的按需加载语法，只在代码执行到该处时才加载模块">动态 import()</span>，<span class="term" data-definition="保存当前会话所有状态（消息、配置、权限等）的全局对象">State 对象</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-02-entry-and-bootstrap.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-3" data-module="Day 3: 终端 UI (Ink) — React for CLI · Box/Text · Provider">
+  <h2>Day 3: 终端 UI (Ink) — React for CLI · Box/Text · Provider</h2>
+  <p class="module-meta">🟢 入门 · 预计时间: 1小时</p>
+
+  <p>Claude Code 的终端界面并非普通的文本输出——它使用 Ink 框架，将 React 的组件化开发模式带入终端。本节解析 Ink 如何将 React 组件渲染为终端文本。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>Ink：React for CLI</h4>
+      <p>Ink 是一个用 React 编写终端应用的框架。你可以用 JSX 编写组件、使用 useState/useEffect 等 Hooks，Ink 负责将虚拟 DOM 渲染为终端中的 ANSI 文本。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>Box = div, Text = span</h4>
+      <p><code>&lt;Box&gt;</code> 是 Ink 的容器组件，类似 HTML 的 <code>&lt;div&gt;</code>，支持 Flexbox 布局。<code>&lt;Text&gt;</code> 是文本组件，类似 <code>&lt;span&gt;</code>，支持颜色和样式设置。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Flexbox 布局</h4>
+      <p>Ink 支持 Flexbox 的核心属性：<code>flexDirection</code>、<code>justifyContent</code>、<code>alignItems</code>、<code>padding</code> 等。终端 UI 的布局方式与 Web 开发如出一辙。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 选择 Ink 而非传统终端库（如 blessed），让 Claude Code 团队可以复用 React 生态的组件模式和状态管理，大幅降低 UI 开发复杂度。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 简单的 Ink 终端 UI 组件
+import { Box, Text } from "ink";
+
+function StatusBar({ model, cost }: Props) {
+  return (
+    &lt;Box flexDirection="row" justifyContent="space-between"&gt;
+      &lt;Text color="cyan"&gt;Model: {model}&lt;/Text&gt;
+      &lt;Text color="yellow"&gt;Cost: ${cost.toFixed(4)}&lt;/Text&gt;
+    &lt;/Box&gt;
+  );
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="Box 不是 span，span 对应的是 Ink 的 Text 组件。" data-explanation-1="正确！Ink 的 Box 是容器组件，功能和 HTML 的 div 一样，支持 Flexbox 布局。" data-explanation-2="Box 不是 table，它是通用的布局容器。">
+    <p class="quiz-question">Ink 中的 Box 组件相当于 HTML 的什么元素？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">span</button>
+      <button class="quiz-option">div</button>
+      <button class="quiz-option">table</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="一个用 React 组件模型构建终端 UI 的框架，将 JSX 渲染为 ANSI 文本">Ink</span>，<span class="term" data-definition="CSS 的弹性盒布局模型，Ink 在终端中同样支持此布局方式">Flexbox</span>，<span class="term" data-definition="React 的上下文提供者，用于在组件树中共享全局状态而不需要逐层传递 props">Provider</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-03-ink-terminal-ui.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-4" data-module="Day 4: REPL 与输入 — 交互循环 · 斜杠命令 · Early Input">
+  <h2>Day 4: REPL 与输入 — 交互循环 · 斜杠命令 · Early Input</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>REPL（Read-Eval-Print Loop）是 Claude Code 交互的核心引擎。本节深入解析用户输入如何被捕获、解析和分发，以及 Early Input 如何解决启动延迟问题。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>REPL.tsx：核心交互引擎</h4>
+      <p>REPL.tsx 是整个交互循环的入口。它管理输入框状态、处理用户提交、调度 Agent 循环，并在 Agent 返回结果后等待下一轮输入。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>斜杠命令系统</h4>
+      <p>用户输入以 <code>/</code> 开头时，会被路由到斜杠命令系统。内置命令如 <code>/help</code>、<code>/clear</code>、<code>/compact</code> 等，支持自定义扩展。命令和普通对话走不同的处理路径。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Early Input 预捕获</h4>
+      <p>用户经常在 Claude Code 启动完成前就开始打字。Early Input 机制在启动阶段就开始监听键盘输入并缓存，初始化完成后立即使用缓存的输入，实现无缝体验。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Early Input 是一个优秀的 UX 设计模式——不要让用户等你准备好，而是在你准备的同时就开始接收用户输入。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// handleSubmit 简化版
+async function handleSubmit(input: string) {
+  // 斜杠命令走单独路径
+  if (input.startsWith("/")) {
+    return handleSlashCommand(input);
+  }
+
+  // 普通对话：添加用户消息，启动 Agent 循环
+  addMessage({ role: "user", content: input });
+  await runAgentLoop();
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="0" data-explanation-0="正确！Early Input 在应用启动期间就开始缓存用户的键盘输入，启动完成后立即提交，避免用户重新输入。" data-explanation-1="自动补全是编辑器功能，不是 Early Input 的作用。" data-explanation-2="命令历史是 shell 功能，与 Early Input 无关。">
+    <p class="quiz-question">Early Input 机制解决了什么问题？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">在启动期间缓存用户输入，启动完成后立即使用</button>
+      <button class="quiz-option">自动补全用户的命令</button>
+      <button class="quiz-option">记住上次的命令历史</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="Read-Eval-Print Loop，读取输入→求值→打印结果→循环的交互模式">REPL</span>，<span class="term" data-definition="以 / 开头的特殊命令，如 /help、/clear，走独立的处理路径">斜杠命令</span>，<span class="term" data-definition="在应用初始化完成前就开始捕获用户键盘输入的优化机制">Early Input</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-04-repl-and-input.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-5" data-module="Day 5: Tool 系统基础 — ToolDef · buildTool · 生命周期">
+  <h2>Day 5: Tool 系统基础 — ToolDef · buildTool · 生命周期</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Tool 系统是 Claude Code 的核心能力引擎——模型通过调用工具来读写文件、执行命令、搜索代码。本节深入解析工具的定义、构建和生命周期。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>ToolDef：统一接口</h4>
+      <p>每个工具都遵循 ToolDef 接口定义：<code>name</code> 标识工具，<code>description</code> 告诉 Claude 模型何时使用此工具，<code>inputSchema</code> 定义参数结构，<code>execute</code> 是实际执行逻辑。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>description 是给 Claude 看的</h4>
+      <p>工具的 <code>description</code> 不是给人看的文档，而是 prompt 的一部分——它告诉 Claude 模型什么场景该用这个工具、有什么限制、期望什么输入。写好 description 直接影响模型的工具选择准确度。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>inputSchema 定义参数</h4>
+      <p>使用 JSON Schema 格式定义工具的输入参数，包括类型、必填项、枚举值等。Claude 模型根据 schema 生成合法的工具调用参数。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Tool 的 description 本质上是 prompt engineering——好的描述让模型精准选择工具，差的描述导致模型误用或忽略工具。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// buildTool 工厂函数简化版
+function buildTool(config: ToolConfig): ToolDef {
+  return {
+    name: config.name,
+    description: config.description,  // 给 Claude 模型的使用说明
+    inputSchema: config.inputSchema,  // JSON Schema 参数定义
+    async execute(input) {
+      // 权限检查 → 参数验证 → 执行 → 返回结果
+      await checkPermission(config.name, input);
+      const validated = validateInput(config.inputSchema, input);
+      return config.handler(validated);
+    },
+  };
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="description 不是给开发者看的文档注释。" data-explanation-1="正确！description 是系统 prompt 的一部分，Claude 模型根据它决定何时以及如何使用这个工具。" data-explanation-2="description 不会显示在终端界面上给最终用户看。">
+    <p class="quiz-question">Tool 的 description 字段是给谁看的？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">给开发者看的代码注释</button>
+      <button class="quiz-option">给 Claude 模型看的，用于决策何时调用此工具</button>
+      <button class="quiz-option">给终端用户看的帮助信息</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="定义工具名称、描述、参数和执行逻辑的统一 TypeScript 类型接口">ToolDef</span>，<span class="term" data-definition="JSON 格式的参数定义规范，描述工具接受什么类型和结构的输入">inputSchema</span>，<span class="term" data-definition="工具从注册到执行再到返回结果的完整流程：注册→发现→调用→权限检查→执行→返回">Tool 生命周期</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-05-tool-system-basics.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-6" data-module="Day 6: 消息类型与对话流 — 5种消息 · tool_use配对 · 规范化">
+  <h2>Day 6: 消息类型与对话流 — 5种消息 · tool_use配对 · 规范化</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Claude API 的对话不是简单的「你问我答」——它有 5 种消息类型，工具调用需要严格的配对协议。理解消息结构是掌握 Agent 循环的关键。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>5 种消息类型</h4>
+      <p><code>user</code>（用户输入）、<code>assistant</code>（模型回复）、<code>tool_use</code>（模型请求调用工具）、<code>tool_result</code>（工具执行结果）、<code>system</code>（系统提示）。每种类型有不同的字段结构。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>tool_use 和 tool_result 通过 ID 配对</h4>
+      <p>当模型决定调用工具时，返回 <code>tool_use</code> 消息并附带唯一的 <code>id</code>。工具执行完毕后，必须返回 <code>tool_result</code> 消息并携带相同的 <code>tool_use_id</code>，API 通过 ID 将请求和结果匹配。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>消息规范化</h4>
+      <p>发送给 API 前，消息需要经过规范化处理：确保 user/assistant 交替出现、移除空消息、截断过长内容、处理图片等特殊内容类型。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> tool_use/tool_result 的 ID 配对机制使得模型可以在一次回复中请求调用多个工具，每个工具独立配对不会混淆。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 消息类型定义
+type Message =
+  | { role: "user"; content: string }
+  | { role: "assistant"; content: ContentBlock[] }
+  | { role: "system"; content: string };
+
+// tool_use 和 tool_result 配对
+type ToolUseBlock = {
+  type: "tool_use";
+  id: string;          // 唯一 ID，如 "toolu_abc123"
+  name: string;        // 工具名称
+  input: unknown;      // 工具参数
+};
+
+type ToolResultBlock = {
+  type: "tool_result";
+  tool_use_id: string; // 必须与 tool_use 的 id 匹配
+  content: string;     // 工具执行结果
+};</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="不是通过工具名称匹配的，因为同一个工具可能被多次调用。" data-explanation-1="时间戳不是配对依据，API 使用显式 ID 匹配。" data-explanation-2="正确！每个 tool_use 有唯一的 id，对应的 tool_result 必须携带相同的 tool_use_id 才能正确配对。">
+    <p class="quiz-question">tool_use 和 tool_result 是如何匹配的？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">通过工具名称</button>
+      <button class="quiz-option">通过时间戳顺序</button>
+      <button class="quiz-option">通过 tool_use_id 唯一标识符</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="模型回复中请求调用某个工具的消息块，包含工具名称、参数和唯一 ID">tool_use</span>，<span class="term" data-definition="工具执行完毕后返回给模型的结果消息，通过 tool_use_id 与请求配对">tool_result</span>，<span class="term" data-definition="将原始消息处理为符合 API 要求的格式，包括交替排列、截断、去空等操作">消息规范化</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-06-message-types.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-7" data-module="Day 7: 第一周回顾 — 知识图谱 · Mini Agent CLI">
+  <h2>Day 7: 第一周回顾 — 知识图谱 · Mini Agent CLI</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>第一周我们建立了 Claude Code 的全景认知：从架构到启动、从 UI 到输入、从工具到消息。本节通过知识图谱串联六天所学，并动手构建一个 Mini Agent CLI。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>六天知识总结图谱</h4>
+      <p>Day 1 架构总览 → Day 2 启动流程 → Day 3 终端 UI → Day 4 REPL 输入 → Day 5 Tool 系统 → Day 6 消息类型。这些知识构成了理解 Claude Code 的基础框架。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>知识连接</h4>
+      <p>启动流程（Day 2）初始化 State，State 驱动 REPL（Day 4），REPL 收集输入后触发 Agent 循环，循环中使用 Tool 系统（Day 5）并通过消息（Day 6）与 API 通信。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Mini Agent CLI 项目</h4>
+      <p>用 Week 1 学到的知识构建一个最小可运行的 Agent CLI：接收用户输入 → 调用 Claude API → 解析 tool_use → 执行工具 → 返回结果。麻雀虽小，五脏俱全。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 理解架构不是目的，能动手构建才是真正掌握。Mini Agent CLI 项目将 6 天的概念落地为可运行的代码。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// Mini Agent CLI 核心循环
+import Anthropic from "@anthropic-ai/sdk";
+import * as readline from "readline";
+
+const client = new Anthropic();
+const messages: Message[] = [];
+
+async function agentLoop(userInput: string) {
+  messages.push({ role: "user", content: userInput });
+
+  while (true) {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4096,
+      messages,
+      tools: myTools,  // 你定义的工具列表
+    });
+
+    // 没有 tool_use → 对话结束
+    if (response.stop_reason === "end_turn") {
+      console.log(extractText(response));
+      break;
+    }
+
+    // 有 tool_use → 执行工具 → 继续循环
+    const toolResults = await executeTools(response);
+    messages.push({ role: "assistant", content: response.content });
+    messages.push({ role: "user", content: toolResults });
+  }
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="日志系统重要，但不是 Agent 循环的最小必要组件。" data-explanation-1="UI 框架是表现层的事，最小 Agent 不需要 Ink。" data-explanation-2="正确！一个最小 Agent 需要接收输入、调用 API、执行工具并循环——这就是 Agent 循环的本质。">
+    <p class="quiz-question">构建最小可运行的 Agent CLI，最核心的部分是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">完善的日志系统</button>
+      <button class="quiz-option">Ink 终端 UI 框架</button>
+      <button class="quiz-option">输入 → API 调用 → 工具执行的循环</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="将多个知识点以节点和边的形式可视化展示其关联关系的图表">知识图谱</span>，<span class="term" data-definition="最小可运行的 Agent 命令行工具，包含输入→API→工具→循环的核心功能">Mini Agent CLI</span>，<span class="term" data-definition="模型调用 API 后检查是否有 tool_use，如果有则执行工具并继续循环的核心流程">Agent 循环</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-01/day-07-week1-review.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-8" data-module="Day 8: BashTool 深度解析 — AST 安全解析 · 权限 · 沙盒">
+  <h2>Day 8: BashTool 深度解析 — AST 安全解析 · 权限 · 沙盒</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>BashTool 是 Claude Code 最强大也最危险的工具——它能执行任意 shell 命令。本节解析 BashTool 如何通过 AST 解析和多层安全机制在强大与安全之间取得平衡。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>AST 解析检测危险命令</h4>
+      <p>BashTool 不是用正则表达式匹配危险命令，而是将 shell 命令解析为 AST（抽象语法树），精确识别 <code>rm -rf</code>、<code>curl | sh</code> 等危险模式，避免正则匹配的误报和漏报。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>多层安全防御</h4>
+      <p>安全不是单一防线：① AST 解析检测危险模式 → ② 只读命令白名单 → ③ 权限系统询问用户 → ④ 沙盒环境隔离。任何一层拦截都能阻止危险操作。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>输出截断策略</h4>
+      <p>命令输出可能极长（如 <code>find /</code>），BashTool 会截断过长输出并保留头尾，告知模型输出被截断，避免撑爆上下文窗口。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 安全性不能依赖单一机制——AST 解析可能遗漏新模式，权限询问可能被用户误批准，只有多层防御才能构建可靠的安全体系。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// BashTool 安全检查流程简化版
+async function executeBash(command: string): Promise&lt;ToolResult&gt; {
+  // 1. AST 解析，检测危险模式
+  const ast = parseShellScript(command);
+  const risks = detectDangerousPatterns(ast);
+
+  // 2. 只读命令白名单（ls, cat, grep 等直接放行）
+  if (isReadOnlyCommand(ast)) {
+    return executeInSandbox(command);
+  }
+
+  // 3. 有风险 → 请求用户授权
+  if (risks.length > 0) {
+    const approved = await requestPermission("Bash", command, risks);
+    if (!approved) return { error: "用户拒绝执行" };
+  }
+
+  // 4. 在沙盒中执行
+  return executeInSandbox(command);
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="0" data-explanation-0="正确！AST（抽象语法树）解析能精确理解命令的语法结构，比正则表达式更准确地识别危险模式。" data-explanation-1="正则表达式容易产生误报和漏报，不够精确。" data-explanation-2="关键词匹配太粗暴，无法理解命令的语义结构。">
+    <p class="quiz-question">BashTool 用什么技术检测危险命令？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">AST（抽象语法树）解析</button>
+      <button class="quiz-option">正则表达式匹配</button>
+      <button class="quiz-option">关键词黑名单</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="Abstract Syntax Tree，将代码/命令解析为树状结构，精确表示语法关系">AST</span>，<span class="term" data-definition="隔离执行环境，限制命令对系统的访问权限，防止恶意操作">沙盒</span>，<span class="term" data-definition="当命令输出超过长度限制时，保留头尾并标记截断，防止占用过多上下文">输出截断</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-08-bash-tool.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-9" data-module="Day 9: 文件工具 — Read/Write/Edit · Diff显示">
+  <h2>Day 9: 文件工具 — Read/Write/Edit · Diff 显示</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>文件操作是 Claude Code 最常用的能力。三种文件工具各有定位：Read 读取、Write 整体写入、Edit 精确修改。本节解析它们的设计理念和核心实现。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>三种文件工具各有定位</h4>
+      <p><code>FileRead</code> 读取文件内容并附带行号；<code>FileWrite</code> 创建或完整覆写文件；<code>FileEdit</code> 使用 old_str/new_str 精确替换文件中的指定内容，无需重写整个文件。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>FileEdit 用 old_str/new_str 精确编辑</h4>
+      <p>FileEdit 不使用行号定位（因为行号在编辑过程中会偏移），而是用文本匹配：提供要替换的原始文本（old_str）和替换后的新文本（new_str），精确且不受其他编辑影响。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Diff 显示与行号标记</h4>
+      <p>编辑完成后，终端会以 diff 格式高亮显示变更内容（红色删除、绿色新增），让用户一目了然地看到修改了什么。FileRead 输出时附带行号，方便引用。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> FileEdit 选择文本匹配而非行号定位是一个深思熟虑的设计——当模型在同一轮对话中多次编辑文件，前面的编辑会改变后续的行号，但文本匹配不受影响。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// FileEditTool 核心逻辑简化版
+async function fileEdit(input: {
+  file_path: string;
+  old_str: string;
+  new_str: string;
+}): Promise&lt;ToolResult&gt; {
+  const content = await readFile(input.file_path, "utf-8");
+
+  // 确保 old_str 在文件中唯一匹配
+  const matchCount = countOccurrences(content, input.old_str);
+  if (matchCount === 0) throw new Error("old_str 未找到");
+  if (matchCount > 1) throw new Error("old_str 匹配多处，请提供更多上下文");
+
+  // 执行替换
+  const newContent = content.replace(input.old_str, input.new_str);
+  await writeFile(input.file_path, newContent);
+
+  return { output: generateDiff(content, newContent) };
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="行号在多次编辑后会偏移，导致后续编辑指向错误位置。" data-explanation-1="正确！文本匹配（old_str/new_str）不受其他编辑导致的行号偏移影响，多次编辑仍然精确。" data-explanation-2="正则可以匹配，但不够直观，且模型更擅长生成精确文本而非正则表达式。">
+    <p class="quiz-question">为什么 FileEdit 使用文本匹配而不是行号定位？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">行号更难解析</button>
+      <button class="quiz-option">行号在多次编辑后会偏移，文本匹配更稳定</button>
+      <button class="quiz-option">行号占用更多 token</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="通过精确匹配原始文本并替换为新文本的文件编辑方式，不依赖行号">文本匹配编辑</span>，<span class="term" data-definition="以红色（删除）和绿色（新增）高亮显示文件变更的格式">Diff 显示</span>，<span class="term" data-definition="FileEdit 要求 old_str 在文件中只出现一次，避免意外修改错误位置">唯一匹配约束</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-09-file-tools.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-10" data-module="Day 10: Agent 循环 — QueryEngine · query() · 流式响应">
+  <h2>Day 10: Agent 循环 — QueryEngine · query() · 流式响应</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>Agent 循环是 Claude Code 的心脏。本节深入 query.ts 中的 <code>while(true)</code> 循环，解析 QueryEngine 如何驱动「调用 API → 解析响应 → 执行工具 → 再次调用」的无限循环。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>QueryEngine：每轮对话的控制器</h4>
+      <p>QueryEngine 封装了一次完整对话的逻辑：管理消息列表、调用 Claude API、处理流式响应、分发 tool_use 给对应的工具执行。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>query() 的 while(true) 循环</h4>
+      <p>核心的 <code>query()</code> 函数是一个 <code>while(true)</code> 循环：每次迭代调用 API，如果响应包含 tool_use 就执行工具并将结果加入消息列表继续循环，直到模型返回 <code>end_turn</code> 才跳出。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>流式响应处理</h4>
+      <p>API 调用使用流式（streaming）模式，模型生成的文本和 tool_use 实时传回。这让用户能看到「Claude 正在思考」的实时输出，而非等待完整响应。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> <code>while(true)</code> 不是死循环——模型的 <code>stop_reason === "end_turn"</code> 是自然退出条件。Agent 的智能在于模型自己决定何时停止调用工具。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// query() 核心循环简化版
+async function query(messages: Message[], tools: ToolDef[]) {
+  while (true) {
+    // 1. 调用 Claude API（流式）
+    const stream = await client.messages.stream({
+      model: "claude-sonnet-4-20250514",
+      messages,
+      tools: tools.map(toApiTool),
+    });
+
+    const response = await stream.finalMessage();
+
+    // 2. 检查是否需要调用工具
+    const toolUseBlocks = response.content
+      .filter(b =&gt; b.type === "tool_use");
+
+    // 3. 没有 tool_use → 对话结束
+    if (toolUseBlocks.length === 0) break;
+
+    // 4. 执行所有工具，收集结果
+    messages.push({ role: "assistant", content: response.content });
+    const results = await Promise.all(
+      toolUseBlocks.map(block =&gt; executeTool(block))
+    );
+    messages.push({ role: "user", content: results });
+  }
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="0" data-explanation-0="正确！query() 的核心是一个 while(true) 循环，每次迭代调用 API 并检查是否有 tool_use，直到模型返回 end_turn。" data-explanation-1="递归调用可以实现但不是实际采用的方式，while(true) 更直观且避免栈溢出。" data-explanation-2="事件驱动不是 Agent 循环的主要模式，它是同步的请求-响应循环。">
+    <p class="quiz-question">Agent 循环在 query.ts 中使用什么结构实现？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">while(true) 循环，end_turn 时 break</button>
+      <button class="quiz-option">递归函数调用</button>
+      <button class="quiz-option">事件驱动回调</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="封装一次完整对话逻辑的控制器，管理消息、API 调用和工具执行">QueryEngine</span>，<span class="term" data-definition="API 实时返回部分结果而非等待完整生成，让用户看到实时输出">流式响应</span>，<span class="term" data-definition="模型返回的停止原因，end_turn 表示对话结束，tool_use 表示需要执行工具">stop_reason</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-10-agent-loop.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-11" data-module="Day 11: 上下文管理 — System Prompt · CLAUDE.md · 记忆">
+  <h2>Day 11: 上下文管理 — System Prompt · CLAUDE.md · 记忆</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Claude Code 的行为不仅由模型决定，更由精心构建的上下文塑造。本节解析 System Prompt 的动态组装、CLAUDE.md 的多级加载，以及上下文如何影响模型行为。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>System Prompt 动态组装</h4>
+      <p>System Prompt 不是一个静态字符串，而是动态拼接而成：基础指令 + 工具描述 + CLAUDE.md 内容 + 当前环境信息（OS、shell、cwd 等）。每次对话都根据当前状态组装。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>CLAUDE.md 多级加载</h4>
+      <p>CLAUDE.md 从多个位置加载并按优先级合并：用户级（<code>~/.claude/CLAUDE.md</code>）→ 父目录级 → 项目级（<code>./CLAUDE.md</code>）。项目级优先级最高，可以覆盖用户级的通用设置。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>上下文收集</h4>
+      <p>除了 CLAUDE.md，上下文还包括：git 状态、当前分支、最近的 commit、项目文件结构等。这些信息帮助模型理解项目背景，做出更准确的决策。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> CLAUDE.md 是用户与模型之间的「契约」——你可以通过它告诉 Claude 项目的技术栈、编码规范、禁止事项等，让模型行为与团队要求一致。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// buildSystemPrompt 简化版
+function buildSystemPrompt(state: AppState): string {
+  const parts: string[] = [];
+
+  // 基础指令
+  parts.push(BASE_SYSTEM_PROMPT);
+
+  // 工具描述（告诉模型可以用哪些工具）
+  parts.push(formatToolDescriptions(state.tools));
+
+  // CLAUDE.md 多级加载（项目级优先）
+  const claudeMd = loadClaudeMd([
+    `${state.homedir}/.claude/CLAUDE.md`,    // 用户级
+    `${state.cwd}/../CLAUDE.md`,              // 父目录级
+    `${state.cwd}/CLAUDE.md`,                 // 项目级（最高优先）
+  ]);
+  parts.push(claudeMd);
+
+  // 环境信息
+  parts.push(`OS: ${state.os}, Shell: ${state.shell}, CWD: ${state.cwd}`);
+
+  return parts.join("\n\n");
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="用户级是最低优先级，提供通用默认设置。" data-explanation-1="父目录级介于用户级和项目级之间。" data-explanation-2="正确！项目级 CLAUDE.md（项目根目录）优先级最高，可以覆盖用户级的通用规则，确保项目特定的需求得到满足。">
+    <p class="quiz-question">CLAUDE.md 的哪个级别优先级最高？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">用户级（~/.claude/CLAUDE.md）</button>
+      <button class="quiz-option">父目录级</button>
+      <button class="quiz-option">项目级（./CLAUDE.md）</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="发送给 Claude API 的第一条消息，定义模型的角色、能力和行为规则">System Prompt</span>，<span class="term" data-definition="项目或用户级别的配置文件，包含给 Claude 的自定义指令和项目背景信息">CLAUDE.md</span>，<span class="term" data-definition="模型在当前对话中可以访问的所有信息总和，包括 System Prompt、历史消息和工具描述">上下文</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-11-context-management.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-12" data-module="Day 12: 上下文压缩 — Snip · MicroCompact · Full Compact">
+  <h2>Day 12: 上下文压缩 — Snip · MicroCompact · Full Compact</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>上下文窗口是有限的资源。当对话越来越长，Claude Code 需要在不丢失关键信息的前提下压缩上下文。本节解析三级压缩策略和 token 预算管理。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>三级压缩策略</h4>
+      <p><strong>Snip</strong>：移除工具输出中的冗余内容（如超长文件内容）；<strong>MicroCompact</strong>：对旧消息做轻度摘要，保留关键信息；<strong>Full Compact</strong>：对整个对话做深度压缩，只保留核心要点。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>80% 阈值自动触发</h4>
+      <p>当 token 使用量达到上下文窗口的 80% 时，系统自动触发压缩。这个阈值确保在压缩完成前仍有足够空间继续对话，不会因为等待压缩而中断。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Token 预算管理</h4>
+      <p>系统实时追踪每条消息的 token 数量，包括 system prompt、用户消息、助手回复和工具结果。预算管理确保每次 API 调用都在上下文窗口限制内。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 压缩是一个信息取舍的过程——Snip 去除明确冗余的内容，MicroCompact 保留信息骨架，Full Compact 只保留「模型继续工作所需的最少信息」。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 压缩决策逻辑简化版
+function shouldCompress(state: ConversationState): CompressionLevel {
+  const usage = state.totalTokens / state.maxContextTokens;
+
+  if (usage &lt; 0.5) return "none";        // 50% 以下不压缩
+  if (usage &lt; 0.7) return "snip";         // 50-70% 轻度裁剪
+  if (usage &lt; 0.8) return "micro";        // 70-80% 微压缩
+  return "full";                           // 80%+ 全量压缩
+}
+
+async function fullCompact(messages: Message[]): Promise&lt;Message[]&gt; {
+  // 用 Claude 自己来摘要对话历史
+  const summary = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    messages: [{ role: "user", content:
+      `请摘要以下对话的关键信息，保留所有重要的文件路径、决策和未完成的任务：\n${formatMessages(messages)}`
+    }],
+  });
+  return [{ role: "user", content: `[对话摘要] ${summary}` }];
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="50% 时只做轻度 Snip 裁剪，不是全量压缩触发点。" data-explanation-1="70% 触发 MicroCompact，还不是全量压缩。" data-explanation-2="正确！当 token 使用达到上下文窗口的 80% 时，触发 Full Compact 全量压缩，确保对话能继续进行。">
+    <p class="quiz-question">Full Compact 压缩在 token 达到上下文窗口的多少时触发？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">50%</button>
+      <button class="quiz-option">70%</button>
+      <button class="quiz-option">80%</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="移除工具输出中的冗余内容（如超长文件、重复日志），最轻量级的压缩方式">Snip</span>，<span class="term" data-definition="对旧消息做轻度摘要，保留关键信息结构的中间级压缩">MicroCompact</span>，<span class="term" data-definition="对整个对话历史做深度摘要，只保留继续工作所需的最少信息">Full Compact</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-12-context-compression.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-13" data-module="Day 13: 子 Agent 工具 — Agent调用Agent · 前台/后台">
+  <h2>Day 13: 子 Agent 工具 — Agent 调用 Agent · 前台/后台</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>当任务过于复杂，一个 Agent 不够用时，Claude Code 允许主 Agent 派生子 Agent 来并行处理子任务。本节解析子 Agent 的创建、通信和生命周期管理。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>主 Agent 派生子 Agent</h4>
+      <p>AgentTool 是一个特殊的工具——它的执行逻辑是启动一个新的 Agent 实例。子 Agent 拥有独立的消息列表和工具集，但共享同一个项目上下文。主 Agent 可以给子 Agent 分配具体的子任务。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>2 分钟自动后台化</h4>
+      <p>子 Agent 默认在前台运行（用户可以看到其输出）。如果执行超过 2 分钟，会自动转入后台，避免阻塞主 Agent 的交互。用户可以随时查看后台任务的状态。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>独立消息列表</h4>
+      <p>子 Agent 维护自己的消息列表，不会污染主 Agent 的对话历史。子 Agent 完成后，只将最终结果（而非全部对话）返回给主 Agent，保持主对话的上下文精简。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 子 Agent 的独立消息列表设计是关键——如果子 Agent 的所有中间对话都加入主 Agent 的上下文，会迅速撑爆上下文窗口。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// AgentTool 简化版
+const AgentTool: ToolDef = {
+  name: "Agent",
+  description: "启动子 Agent 处理独立的子任务",
+  inputSchema: {
+    type: "object",
+    properties: {
+      task: { type: "string", description: "子任务描述" },
+    },
+    required: ["task"],
+  },
+  async execute({ task }) {
+    const subAgent = new QueryEngine({
+      messages: [{ role: "user", content: task }],
+      tools: getSubAgentTools(),  // 子 Agent 可用的工具子集
+    });
+
+    // 设置 2 分钟超时自动后台化
+    const timeout = setTimeout(() =&gt; subAgent.moveToBackground(), 2 * 60 * 1000);
+
+    const result = await subAgent.run();
+    clearTimeout(timeout);
+
+    return { output: result.summary };  // 只返回摘要给主 Agent
+  },
+};</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="30 秒太短，子 Agent 很多任务需要更多时间。" data-explanation-1="正确！子 Agent 前台运行超过 2 分钟后自动转入后台，避免阻塞主 Agent 的交互。" data-explanation-2="5 分钟太长，会阻塞用户交互体验。">
+    <p class="quiz-question">子 Agent 在前台运行多久后会自动转入后台？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">30 秒</button>
+      <button class="quiz-option">2 分钟</button>
+      <button class="quiz-option">5 分钟</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="由主 Agent 通过 AgentTool 派生的独立 Agent 实例，有自己的消息列表和工具集">子 Agent</span>，<span class="term" data-definition="任务在前台可见地运行，超时后自动切换到后台静默执行">自动后台化</span>，<span class="term" data-definition="子 Agent 有自己独立的对话历史，完成后只将结果摘要返回给主 Agent">独立消息列表</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-13-agent-tool.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-14" data-module="Day 14: 第二周回顾 — 知识图谱 · 功能完整Agent">
+  <h2>Day 14: 第二周回顾 — 知识图谱 · 功能完整 Agent</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>第二周我们深入了 Claude Code 的核心机制：从工具实现到 Agent 循环，从上下文管理到压缩策略。本节通过知识图谱串联所学，并构建一个带工具的完整 Agent CLI。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>Week 2 六天知识总结</h4>
+      <p>Day 8 BashTool 安全 → Day 9 文件工具 → Day 10 Agent 循环 → Day 11 上下文管理 → Day 12 上下文压缩 → Day 13 子 Agent。这些组成了 Claude Code 的核心运行时。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>知识连接</h4>
+      <p>Agent 循环（Day 10）调用 BashTool（Day 8）和文件工具（Day 9），通过上下文管理（Day 11）构建 prompt，用压缩（Day 12）控制 token 预算，复杂任务交给子 Agent（Day 13）。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>中级项目：带工具的 Agent CLI</h4>
+      <p>在 Week 1 的 Mini Agent 基础上，加入文件读写工具、Bash 命令执行和基础安全检查，构建一个功能更完整的 Agent CLI。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Week 2 的核心学习是「工具赋予 Agent 能力，安全限制 Agent 行为」——能力和约束是 Agent 设计的两面。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 带工具的 Agent CLI 框架
+const tools: ToolDef[] = [
+  {
+    name: "ReadFile",
+    description: "读取指定文件的内容",
+    inputSchema: { type: "object", properties: {
+      path: { type: "string" }
+    }, required: ["path"] },
+    execute: async ({ path }) =&gt; ({
+      output: await fs.readFile(path, "utf-8"),
+    }),
+  },
+  {
+    name: "Bash",
+    description: "执行 shell 命令（只读命令自动放行）",
+    inputSchema: { type: "object", properties: {
+      command: { type: "string" }
+    }, required: ["command"] },
+    execute: async ({ command }) =&gt; {
+      if (!isReadOnly(command)) {
+        const ok = await confirm(`执行: ${command}?`);
+        if (!ok) return { error: "用户拒绝" };
+      }
+      return { output: execSync(command).toString() };
+    },
+  },
+];
+
+// 使用 Week 1 的 agentLoop，传入工具列表
+await agentLoop(userInput, tools);</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="更多工具增加能力但不自动保证安全性。" data-explanation-1="更快的 API 是性能优化，不是设计核心。" data-explanation-2="正确！Agent 设计的核心矛盾是能力（工具赋予）与约束（安全限制）的平衡——太多约束限制能力，太少约束带来风险。">
+    <p class="quiz-question">Agent 设计中最核心的平衡是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">更多工具 vs 更少工具</button>
+      <button class="quiz-option">更快的 API vs 更准确的响应</button>
+      <button class="quiz-option">能力（工具）与约束（安全）的平衡</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="只读命令（如 ls、cat）自动放行，写入命令需要用户确认的安全策略">只读白名单</span>，<span class="term" data-definition="将 Week 1 和 Week 2 的知识整合，构建具备文件操作和命令执行能力的 CLI 工具">功能完整 Agent</span>，<span class="term" data-definition="工具提供能力、安全提供约束，两者共同塑造 Agent 的行为边界">能力-约束平衡</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-14-week2-review.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-15" data-module="Day 15: 权限系统 — 多层安全 · 权限模式 · 沙盒">
+  <h2>Day 15: 权限系统 — 多层安全 · 权限模式 · 沙盒</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>权限系统是 Claude Code 安全架构的核心。本节解析四种权限模式的设计理念、多层防御机制，以及 CLAUDE.md 中的权限规则如何与代码层面的安全检查协同工作。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>四种权限模式</h4>
+      <p><strong>default</strong>：危险操作逐次询问用户；<strong>plan</strong>：只允许读取操作，所有写入操作需确认（最安全）；<strong>auto</strong>：自动批准大多数操作；<strong>bypass</strong>：完全跳过权限检查（仅开发环境）。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>多层安全防御</h4>
+      <p>安全检查从外到内层层递进：① CLAUDE.md 规则（禁止特定操作）→ ② 权限模式（决定是否询问）→ ③ 工具级检查（AST 解析等）→ ④ 沙盒隔离（限制系统访问）。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>CLAUDE.md 权限规则</h4>
+      <p>用户可以在 CLAUDE.md 中定义权限规则，如「永远不要删除文件」「只在 src/ 目录下编辑」等。这些规则在权限检查时被读取并强制执行。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> plan 模式是代码审查的最佳搭档——Claude 只能读取和分析代码，所有修改操作都需要人工确认，确保每一个变更都经过人类审批。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 权限检查流程简化版
+async function checkPermission(
+  toolName: string,
+  input: unknown,
+  mode: PermissionMode
+): Promise&lt;boolean&gt; {
+  // 1. CLAUDE.md 规则检查
+  const rules = loadPermissionRules();
+  if (rules.isDenied(toolName, input)) {
+    return false;  // 被 CLAUDE.md 规则明确禁止
+  }
+
+  // 2. 权限模式检查
+  switch (mode) {
+    case "bypass": return true;           // 跳过所有检查
+    case "auto":   return true;           // 自动批准
+    case "plan":
+      return isReadOnlyTool(toolName);    // 只允许读取
+    case "default":
+      if (isReadOnlyTool(toolName)) return true;
+      return await promptUser(            // 询问用户
+        `允许 ${toolName} 执行此操作？`
+      );
+  }
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="default 模式会询问用户，但仍允许写入操作。" data-explanation-1="正确！plan 模式只允许读取操作，所有写入/修改操作都需要用户明确确认，是最安全的模式。" data-explanation-2="auto 模式会自动批准大多数操作，安全性最低（bypass 除外）。">
+    <p class="quiz-question">哪个权限模式最安全？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">default</button>
+      <button class="quiz-option">plan</button>
+      <button class="quiz-option">auto</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="控制 Agent 操作权限的四种模式：default（逐次询问）、plan（只读）、auto（自动批准）、bypass（跳过检查）">权限模式</span>，<span class="term" data-definition="从 CLAUDE.md 规则到工具级检查的多重安全检查机制，任一层拦截即可阻止操作">多层防御</span>，<span class="term" data-definition="限制程序对操作系统资源访问的隔离环境，防止恶意代码影响宿主系统">沙盒</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-15-permission-system.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-16" data-module="Day 16: MCP 协议集成 — Model Context Protocol · 工具发现">
+  <h2>Day 16: MCP 协议集成 — Model Context Protocol · 工具发现</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>MCP（Model Context Protocol）是 Anthropic 提出的开放协议，让 AI 应用以标准化方式连接外部工具和数据源。本节解析 Claude Code 如何集成 MCP，实现动态工具扩展。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>MCP 三种能力：Tools / Resources / Prompts</h4>
+      <p><strong>Tools</strong>：可执行的操作（如查询数据库、发送邮件）；<strong>Resources</strong>：可读取的数据源（如文件、API 响应）；<strong>Prompts</strong>：预定义的 prompt 模板。三种能力覆盖了 AI 与外部世界交互的主要场景。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>Server / Client 架构</h4>
+      <p>MCP Server 提供能力（工具/资源/提示），MCP Client（Claude Code）发现并调用这些能力。通信使用 JSON-RPC 协议，支持 stdio 和 HTTP 两种传输方式。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>动态工具注册</h4>
+      <p>Claude Code 启动时连接配置的 MCP Server，获取其提供的工具列表，并将这些工具动态注册到 Tool 系统中。模型看到的工具列表会包含 MCP 提供的外部工具。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> MCP 让 Claude Code 的能力变成「可插拔」的——你不需要修改 Claude Code 源码，只需编写 MCP Server 就能让它连接新的数据源和工具。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// MCP Server 示例：提供一个查询数据库的工具
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+
+const server = new McpServer({
+  name: "database-tools",
+  version: "1.0.0",
+});
+
+// 注册一个工具
+server.tool(
+  "query_database",
+  "执行 SQL 查询并返回结果",
+  { sql: z.string().describe("要执行的 SQL 查询语句") },
+  async ({ sql }) =&gt; {
+    const result = await db.query(sql);
+    return { content: [{ type: "text", text: JSON.stringify(result) }] };
+  }
+);
+
+// 启动 Server
+const transport = new StdioServerTransport();
+await server.connect(transport);</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="MCP 不止提供 Tools，还有 Resources 和 Prompts。" data-explanation-1="MCP 不止提供 Resources 和 Prompts，还有 Tools。" data-explanation-2="正确！MCP 定义了三种能力：Tools（可执行操作）、Resources（可读数据）和 Prompts（提示模板），覆盖 AI 与外部系统交互的主要场景。">
+    <p class="quiz-question">MCP 协议定义了哪三种能力？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">Read / Write / Execute</button>
+      <button class="quiz-option">Input / Output / Storage</button>
+      <button class="quiz-option">Tools / Resources / Prompts</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="Model Context Protocol，Anthropic 提出的开放协议，标准化 AI 应用与外部工具/数据源的连接方式">MCP</span>，<span class="term" data-definition="提供工具、资源或提示能力的服务端程序，Claude Code 作为 Client 连接它">MCP Server</span>，<span class="term" data-definition="Claude Code 启动时从 MCP Server 获取工具列表并加入 Tool 系统的过程">动态工具注册</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-16-mcp-integration.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-17" data-module="Day 17: 任务系统 — 前台/后台 · 进度追踪 · 并行">
+  <h2>Day 17: 任务系统 — 前台/后台 · 进度追踪 · 并行</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>复杂的编程任务往往需要同时进行多个操作。Claude Code 的任务系统管理前台和后台任务的生命周期，支持并行执行和进度追踪。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>前台任务：可见可中断</h4>
+      <p>前台任务的输出实时显示在终端中，用户可以看到执行进度并随时中断（Ctrl+C）。典型前台任务包括文件编辑、代码生成等需要用户关注的操作。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>后台任务：静默通知</h4>
+      <p>后台任务在不打扰用户的情况下静默执行。完成后通过通知告知用户结果。长时间运行的工具调用、子 Agent 超时后的任务都会转入后台。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>并行执行</h4>
+      <p>当模型在一次响应中请求多个 tool_use 时，如果工具之间没有依赖关系，系统会使用 <code>Promise.all()</code> 并行执行，显著提升效率。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 前台/后台的切换不是全有或全无——一个任务可以从前台开始（让用户看到初始进展），超时后自动转后台（不阻塞交互）。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// Task 接口定义
+interface Task {
+  id: string;
+  type: "foreground" | "background";
+  status: "running" | "completed" | "failed" | "cancelled";
+  progress?: number;        // 0-100 进度百分比
+  result?: ToolResult;
+  startedAt: number;
+  completedAt?: number;
+}
+
+// 并行执行多个工具
+async function executeToolsInParallel(
+  toolUseBlocks: ToolUseBlock[]
+): Promise&lt;ToolResult[]&gt; {
+  return Promise.all(
+    toolUseBlocks.map(block =&gt; {
+      const tool = findTool(block.name);
+      const task = createTask(block, "foreground");
+      return tool.execute(block.input)
+        .then(result =&gt; { task.status = "completed"; return result; })
+        .catch(err =&gt; { task.status = "failed"; return { error: err.message }; });
+    })
+  );
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="0" data-explanation-0="正确！前台任务的输出实时显示在终端中，用户可以看到进度并通过 Ctrl+C 随时中断执行。" data-explanation-1="后台任务才是静默执行的，前台任务对用户可见。" data-explanation-2="前台任务不一定优先级更高，它只是对用户可见。">
+    <p class="quiz-question">前台任务和后台任务的核心区别是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">前台任务输出可见，用户可中断</button>
+      <button class="quiz-option">前台任务运行更快</button>
+      <button class="quiz-option">前台任务优先级更高</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="输出实时显示在终端、用户可以看到进度并中断的任务类型">前台任务</span>，<span class="term" data-definition="在后台静默执行、完成后通知用户的任务类型">后台任务</span>，<span class="term" data-definition="使用 Promise.all() 同时执行多个独立工具调用，提升效率">并行执行</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-17-task-system.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-18" data-module="Day 18: 状态管理 — AppState · Provider · 会话恢复">
+  <h2>Day 18: 状态管理 — AppState · Provider · 会话恢复</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>Claude Code 使用 React 的状态管理模式来管理整个应用的状态。本节解析 AppState 的设计、Context Provider 的层级结构，以及会话如何持久化和恢复。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>React Context Provider</h4>
+      <p>AppState 通过 React Context API 在组件树中共享。顶层 Provider 包裹整个应用，任何子组件都可以通过 <code>useAppState()</code> Hook 访问和更新全局状态。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>不可变更新</h4>
+      <p>状态更新遵循 React 的不可变原则：不直接修改 state 对象，而是创建新对象。这确保 React 能正确检测变化并触发重新渲染。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>会话持久化与恢复</h4>
+      <p>对话历史和状态会被序列化保存到磁盘。用户可以通过 <code>claude --resume</code> 恢复之前的会话，包括完整的消息历史和上下文。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Claude Code 在终端中使用了 Web 开发的状态管理模式（React Context + 不可变更新），这得益于 Ink 框架让终端 UI 也能享受 React 生态。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// AppState 与 useAppState 简化版
+interface AppState {
+  messages: Message[];
+  tools: ToolDef[];
+  permissionMode: PermissionMode;
+  model: string;
+  totalCost: number;
+  sessionId: string;
+}
+
+const AppStateContext = React.createContext&lt;AppState&gt;(null!);
+
+function AppStateProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState&lt;AppState&gt;(initialState);
+
+  // 不可变更新：添加消息
+  const addMessage = (msg: Message) =&gt; {
+    setState(prev =&gt; ({
+      ...prev,
+      messages: [...prev.messages, msg],
+    }));
+  };
+
+  return (
+    &lt;AppStateContext.Provider value={{ ...state, addMessage }}&gt;
+      {children}
+    &lt;/AppStateContext.Provider&gt;
+  );
+}
+
+// 任何组件都可以访问状态
+function useAppState() {
+  return useContext(AppStateContext);
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="直接修改状态会导致 React 无法检测变化，不会触发重新渲染。" data-explanation-1="正确！不可变更新（创建新对象而非直接修改）让 React 能通过引用比较检测到状态变化，正确触发重新渲染。" data-explanation-2="深拷贝性能开销太大，不可变更新使用浅拷贝（展开运算符）更高效。">
+    <p class="quiz-question">为什么状态更新要使用不可变方式？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">为了减少内存使用</button>
+      <button class="quiz-option">让 React 能正确检测变化并触发重新渲染</button>
+      <button class="quiz-option">为了支持深拷贝</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="保存应用所有运行时状态的核心数据结构，包括消息、工具、权限和会话信息">AppState</span>，<span class="term" data-definition="React Context API 的状态共享组件，让子组件无需逐层传递 props 即可访问全局状态">Provider</span>，<span class="term" data-definition="将对话历史序列化到磁盘并在下次启动时恢复的机制">会话恢复</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-18-state-management.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-19" data-module="Day 19: 成本与性能 — 成本追踪 · 启动优化 · Token预算">
+  <h2>Day 19: 成本与性能 — 成本追踪 · 启动优化 · Token 预算</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>AI Agent 的运行成本不可忽视——每次 API 调用都消耗 token 费用。本节解析 Claude Code 如何追踪成本、优化启动性能，以及利用 Prompt Cache 降低开销。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>实时成本追踪</h4>
+      <p>每次 API 调用后，系统记录输入/输出 token 数量并按模型定价计算费用。累计费用实时显示在终端状态栏中，让用户对当前会话的花费一目了然。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>并行预加载启动优化</h4>
+      <p>启动时使用 <code>Promise.all()</code> 并行加载配置、检查权限、初始化 API 客户端。配合动态 <code>import()</code>，首次交互延迟从数秒降至毫秒级。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Prompt Cache</h4>
+      <p>Claude API 支持 Prompt Cache：System Prompt 和消息前缀在多次调用之间可以被缓存，避免重复处理相同的 token，降低延迟和费用（缓存 token 费用约为原价的 10%）。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Prompt Cache 是 Claude Code 成本优化的最大杠杆——System Prompt 和对话历史在每轮都重复发送，缓存后只需支付首次的 token 费用。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 成本追踪实现简化版
+interface CostTracker {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  totalCost: number;
+}
+
+function updateCost(tracker: CostTracker, usage: ApiUsage): CostTracker {
+  const inputCost = usage.input_tokens * PRICE_PER_INPUT_TOKEN;
+  const outputCost = usage.output_tokens * PRICE_PER_OUTPUT_TOKEN;
+  // 缓存 token 费用约为原价的 10%
+  const cacheCost = usage.cache_read_tokens * PRICE_PER_INPUT_TOKEN * 0.1;
+
+  return {
+    inputTokens: tracker.inputTokens + usage.input_tokens,
+    outputTokens: tracker.outputTokens + usage.output_tokens,
+    cacheReadTokens: tracker.cacheReadTokens + usage.cache_read_tokens,
+    totalCost: tracker.totalCost + inputCost + outputCost + cacheCost,
+  };
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="并行加载优化启动速度，但不直接降低 API 调用成本。" data-explanation-1="上下文压缩减少 token 数量，但 Prompt Cache 的成本节约更直接和显著。" data-explanation-2="正确！Prompt Cache 让重复的 System Prompt 和消息历史只需首次付费，后续调用使用缓存 token（约原价 10%），是成本优化的最大杠杆。">
+    <p class="quiz-question">Claude Code 中哪个技术对降低 API 调用成本贡献最大？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">并行预加载</button>
+      <button class="quiz-option">上下文压缩</button>
+      <button class="quiz-option">Prompt Cache</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="记录每次 API 调用的输入/输出 token 数量并按定价计算累计费用的机制">成本追踪</span>，<span class="term" data-definition="Claude API 将重复的 System Prompt 和消息前缀缓存在服务端，减少重复处理的延迟和费用">Prompt Cache</span>，<span class="term" data-definition="为每次 API 调用设定的最大 token 消耗限制，防止单次调用失控">Token 预算</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-19-cost-and-performance.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-20" data-module="Day 20: 多 Agent 系统 — Team · Swarm · Coordinator · Worktree">
+  <h2>Day 20: 多 Agent 系统 — Team · Swarm · Coordinator · Worktree</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>单个 Agent 的能力有上限——真正复杂的项目需要多个 Agent 协作。本节解析多 Agent 系统的两种模式（Team 和 Swarm），以及 Git Worktree 如何隔离并行操作。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>Team 模式：Coordinator 分层协作</h4>
+      <p>Team 模式有一个 Coordinator（协调者）负责任务分解和分配。Coordinator 将大任务拆分为子任务，分配给多个 Worker Agent，收集结果后整合。适合有明确层级的复杂项目。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>Swarm 模式：对等 Agent 网络</h4>
+      <p>Swarm 模式中所有 Agent 是对等的，没有中心协调者。Agent 之间通过共享状态（如文件系统）进行隐式协作。适合松耦合的并行任务。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>Git Worktree 隔离并行操作</h4>
+      <p>多个 Agent 同时修改代码会产生冲突。Git Worktree 为每个 Agent 创建独立的工作目录（共享同一个 .git 仓库），每个 Agent 在自己的分支上工作，最后合并。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> Git Worktree 是多 Agent 并行编码的关键基础设施——它解决了「多个 Agent 同时编辑同一个文件」的根本冲突问题。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// Coordinator 模式简化版
+async function coordinatorLoop(task: string, workerCount: number) {
+  // 1. Coordinator 分解任务
+  const subtasks = await decompose(task);
+
+  // 2. 为每个 Worker 创建独立的 Git Worktree
+  const worktrees = await Promise.all(
+    subtasks.map((_, i) =&gt;
+      exec(`git worktree add ../worker-${i} -b worker-branch-${i}`)
+    )
+  );
+
+  // 3. 并行启动 Worker Agent
+  const results = await Promise.all(
+    subtasks.map((subtask, i) =&gt; {
+      const worker = new AgentWorker({
+        cwd: worktrees[i].path,  // 各自独立的工作目录
+        task: subtask,
+      });
+      return worker.run();
+    })
+  );
+
+  // 4. 合并所有 Worker 的结果
+  for (const worktree of worktrees) {
+    await exec(`git merge ${worktree.branch}`);
+    await exec(`git worktree remove ${worktree.path}`);
+  }
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="2" data-explanation-0="文件锁会导致 Agent 等待，降低并行效率。" data-explanation-1="按时间轮换（时间片）不适合 Agent 的工作模式，每个 Agent 需要完整的上下文。" data-explanation-2="正确！Git Worktree 为每个 Agent 创建独立的工作目录和分支，Agent 在各自的空间工作互不干扰，最后通过 Git 合并。">
+    <p class="quiz-question">多 Agent 并行修改代码时如何避免冲突？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">使用文件锁</button>
+      <button class="quiz-option">按时间轮换执行</button>
+      <button class="quiz-option">使用 Git Worktree 创建独立工作目录</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="有中心协调者（Coordinator）负责任务分解、分配和结果整合的多 Agent 协作模式">Team 模式</span>，<span class="term" data-definition="所有 Agent 对等、无中心协调者、通过共享状态隐式协作的多 Agent 模式">Swarm 模式</span>，<span class="term" data-definition="Git 功能，为同一仓库创建多个独立工作目录，每个目录可以在不同分支上工作">Git Worktree</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-20-multi-agent.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section><section class="module" id="module-21" data-module="Day 21: 终极项目 — 构建你的 AI Agent CLI">
+  <h2>Day 21: 终极项目 — 构建你的 AI Agent CLI</h2>
+  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+
+  <p>21 天的学习汇聚于此——是时候把所有知识整合起来，构建一个完整的 AI Agent CLI。从入口到循环，从工具到安全，从上下文到成本，打造属于你自己的编程助手。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>21 天知识整合</h4>
+      <p>架构设计（Week 1）→ 核心机制（Week 2）→ 高级特性（Week 3）。从宏观理解到微观实现，从单 Agent 到多 Agent，你已经掌握了构建 AI Agent 的完整知识体系。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>完整项目结构</h4>
+      <p>一个完整的 Agent CLI 需要：CLI 入口（Day 2）、REPL 交互（Day 4）、Agent 循环（Day 10）、Tool 系统（Day 5/8/9）、权限管理（Day 15）、上下文管理（Day 11/12）和成本追踪（Day 19）。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>核心代码实现</h4>
+      <p>最终项目将这些模块串联：入口解析参数 → 初始化状态 → 启动 REPL → 用户输入进入 Agent 循环 → 循环中调用工具 → 权限检查 → 执行 → 返回结果 → 追踪成本。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 一个好的 AI Agent 不在于功能多少，而在于核心循环的健壮性——输入处理、API 调用、工具执行、错误恢复的每一步都要可靠。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// 完整 Agent CLI 入口 + 循环 + REPL
+import Anthropic from "@anthropic-ai/sdk";
+import * as readline from "readline";
+
+const client = new Anthropic();
+
+// 工具定义
+const tools = [
+  { name: "ReadFile", /* ... */ },
+  { name: "WriteFile", /* ... */ },
+  { name: "Bash", /* ... */ },
+];
+
+// Agent 循环
+async function agentLoop(messages: Message[]) {
+  const costTracker = { totalCost: 0 };
+
+  while (true) {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8192,
+      system: buildSystemPrompt(),  // Day 11: 上下文管理
+      messages,
+      tools,
+    });
+
+    // Day 19: 成本追踪
+    updateCost(costTracker, response.usage);
+
+    if (response.stop_reason === "end_turn") {
+      console.log(extractText(response));
+      break;
+    }
+
+    // Day 5/8/9: 工具执行
+    messages.push({ role: "assistant", content: response.content });
+    const results = [];
+    for (const block of response.content) {
+      if (block.type === "tool_use") {
+        // Day 15: 权限检查
+        await checkPermission(block.name, block.input);
+        const result = await executeTool(block);
+        results.push({ type: "tool_result", tool_use_id: block.id, content: result });
+      }
+    }
+    messages.push({ role: "user", content: results });
+  }
+
+  console.log(`\n总成本: $${costTracker.totalCost.toFixed(4)}`);
+}
+
+// REPL 交互循环
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const messages: Message[] = [];
+
+function prompt() {
+  rl.question("You&gt; ", async (input) =&gt; {
+    if (input === "/quit") { rl.close(); return; }
+    messages.push({ role: "user", content: input });
+    await agentLoop(messages);
+    prompt();  // 继续等待下一轮输入
+  });
+}
+
+prompt();</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="1" data-explanation-0="功能多少不是核心，一个只有 3 个工具但循环健壮的 Agent 远好于有 30 个工具但会崩溃的 Agent。" data-explanation-1="正确！Agent 的核心循环（输入→API→工具→结果）的健壮性决定了整个系统的可靠性。错误恢复、权限检查、成本控制都围绕这个循环展开。" data-explanation-2="UI 是表现层的事，一个好的 Agent 即使没有精美 UI 也能可靠工作。">
+    <p class="quiz-question">构建一个好的 AI Agent，最重要的是什么？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">支持尽可能多的工具</button>
+      <button class="quiz-option">核心循环的健壮性和可靠性</button>
+      <button class="quiz-option">精美的终端 UI</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="将 21 天学习的所有模块（入口、REPL、工具、权限、上下文、成本）整合成完整可运行的 CLI 工具">终极项目</span>，<span class="term" data-definition="Agent 的核心 while(true) 循环能正确处理各种异常情况（网络错误、工具失败、权限拒绝等）并优雅恢复">健壮性</span>，<span class="term" data-definition="从宏观架构到微观实现的完整理解，能独立设计和构建 AI Agent 系统">知识体系</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-03/day-21-capstone.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>  </main>
+</body>
+</html>

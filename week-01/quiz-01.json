@@ -1,0 +1,58 @@
+[
+  {
+    "id": "w1q1",
+    "day": 1,
+    "question": "Claude Code 的三层架构中，Agent 循环和 Tool 系统属于哪一层？",
+    "options": ["表现层", "核心层", "服务层", "数据层"],
+    "answer": 1,
+    "explanation": "Agent 循环（QueryEngine, query()）和 Tool 系统是核心层的组成部分，负责 Agent 的'大脑'功能。"
+  },
+  {
+    "id": "w1q2",
+    "day": 2,
+    "question": "Claude Code 在 main.tsx 的前几行就调用 startKeychainPrefetch()，这体现了什么优化策略？",
+    "options": ["缓存策略", "并行预加载", "懒加载", "代码分割"],
+    "answer": 1,
+    "explanation": "这是并行预加载策略——在等待主程序加载时，就开始读取凭证，节省启动时间。"
+  },
+  {
+    "id": "w1q3",
+    "day": 3,
+    "question": "Ink 框架中，<Box> 组件对应 Web 中的什么元素？",
+    "options": ["<span>", "<div>", "<p>", "<section>"],
+    "answer": 1,
+    "explanation": "<Box> 是 Ink 的布局容器，使用 Flexbox 布局，相当于 Web 中的 <div>。"
+  },
+  {
+    "id": "w1q4",
+    "day": 4,
+    "question": "Claude Code 的 Early Input 功能解决了什么问题？",
+    "options": ["防止输入注入", "系统未就绪时缓存用户输入", "加密用户输入", "限制输入长度"],
+    "answer": 1,
+    "explanation": "Early Input 在系统加载阶段就捕获用户键盘输入，存入缓冲区，加载完成后自动填入。"
+  },
+  {
+    "id": "w1q5",
+    "day": 5,
+    "question": "ToolDef 中的 description 字段主要是给谁看的？",
+    "options": ["开发者", "用户", "Claude（AI模型）", "日志系统"],
+    "answer": 2,
+    "explanation": "description 是给 Claude 看的，Claude 根据它决定什么时候调用哪个工具。写好 description 直接影响 Agent 行为。"
+  },
+  {
+    "id": "w1q6",
+    "day": 6,
+    "question": "tool_result 消息中的 tool_use_id 必须满足什么条件？",
+    "options": ["是全局唯一的 UUID", "和 tool_use 的 id 一一对应", "按时间递增", "包含工具名"],
+    "answer": 1,
+    "explanation": "每个 tool_result 的 tool_use_id 必须精确匹配对应 tool_use 的 id，这是 Anthropic API 的硬性要求。"
+  },
+  {
+    "id": "w1q7",
+    "day": 5,
+    "question": "buildTool() 工厂函数的作用是什么？",
+    "options": ["编译 TypeScript", "将 ToolDef 转换为完整 Tool 对象", "注册工具到 npm", "生成工具文档"],
+    "answer": 1,
+    "explanation": "buildTool() 将原始 ToolDef 定义封装为完整的 Tool 对象，添加默认行为、日志、错误处理等。"
+  }
+]

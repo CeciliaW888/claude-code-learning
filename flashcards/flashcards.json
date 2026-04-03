@@ -1,0 +1,22 @@
+[
+  { "front": "Agent Loop（Agent 循环）", "back": "感知→思考→行动的无限循环。Claude Code 中由 query.ts 实现，直到模型不再调用工具时终止。", "week": 1 },
+  { "front": "Tool 接口", "back": "所有工具的统一定义：name + description + inputSchema + call()。Claude Code 有 30+ 工具都遵循这个接口。", "week": 1 },
+  { "front": "Ink", "back": "React for CLI 框架。用 <Box> 和 <Text> 组件构建终端界面，支持 Flexbox 布局、状态管理、Hooks。", "week": 1 },
+  { "front": "QueryEngine", "back": "每轮对话的控制器。负责消息组装、API 调用、工具执行协调。对应 src/QueryEngine.ts。", "week": 1 },
+  { "front": "System Prompt", "back": "告诉 Claude '你是谁、能做什么'。由角色定义、工具列表、行为规则、项目上下文、CLAUDE.md 动态组装。", "week": 1 },
+  { "front": "tool_use / tool_result", "back": "Claude 调用工具返回 tool_use 块，执行结果包装为 tool_result 块。两者通过 tool_use_id 一一配对。", "week": 1 },
+  { "front": "Commander.js", "back": "CLI 参数解析库。Claude Code 用它处理 --model、--print、--resume 等命令行参数。", "week": 1 },
+  { "front": "BashTool 安全检查", "back": "使用 AST 解析命令结构，检测危险操作（rm -rf、curl|sh）。分为：解析→只读检查→权限检查→沙盒判定。", "week": 2 },
+  { "front": "old_str / new_str", "back": "FileEditTool 的精确编辑模式。用文本匹配代替行号编辑，避免行号偏移问题。要求 old_str 唯一匹配。", "week": 2 },
+  { "front": "上下文压缩", "back": "三种策略：Snip（截断大输出）→ MicroCompact（单条消息摘要）→ Full Compact（整段对话摘要）。在 token 使用达到 80% 时自动触发。", "week": 2 },
+  { "front": "CLAUDE.md", "back": "用户自定义指令文件。项目级 > 父目录级 > 用户级。可配置 allow/deny 权限规则、编码规范。", "week": 2 },
+  { "front": "子 Agent (AgentTool)", "back": "主 Agent 可派生子 Agent 处理子任务。子 Agent 有独立的消息列表和上下文。超过 2 分钟自动转后台。", "week": 2 },
+  { "front": "流式响应 (Streaming)", "back": "Claude API 一个字符一个字符返回。通过 content_block_delta 事件实时渲染，不用等完整响应。", "week": 2 },
+  { "front": "权限模式 (PermissionMode)", "back": "default（每次确认）、plan（只规划）、auto（按规则自动执行）、bypass（绕过确认）。多层安全防御。", "week": 3 },
+  { "front": "MCP (Model Context Protocol)", "back": "AI 工具集成标准协议。MCP Server 提供工具，MCP Client（Agent）消费。支持 Tools、Resources、Prompts 三种能力。", "week": 3 },
+  { "front": "Task 系统", "back": "管理长时间运行的操作。前台任务可见可中断，后台任务静默执行完成后通知。支持并行执行。", "week": 3 },
+  { "front": "AppState + Provider", "back": "全局状态通过 React Context Provider 提供给组件树。不可变更新模式，状态变化触发持久化。", "week": 3 },
+  { "front": "Prompt Cache", "back": "重复的 System Prompt 可被缓存，缓存命中的 token 价格更低。设计 System Prompt 时保持前缀稳定可最大化命中率。", "week": 3 },
+  { "front": "Git Worktree 隔离", "back": "多 Agent 并行工作时，每个 Agent 在独立的 git worktree 中工作，避免文件冲突。", "week": 3 },
+  { "front": "Team vs Swarm", "back": "Team：有 Coordinator 的分层协作。Swarm：对等 Agent 网络，互相通信。各适用不同场景。", "week": 3 }
+]

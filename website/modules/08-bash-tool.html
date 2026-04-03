@@ -1,0 +1,73 @@
+<section class="module" id="module-8" data-module="Day 8: BashTool 深度解析 — AST 安全解析 · 权限 · 沙盒">
+  <h2>Day 8: BashTool 深度解析 — AST 安全解析 · 权限 · 沙盒</h2>
+  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+
+  <p>BashTool 是 Claude Code 最强大也最危险的工具——它能执行任意 shell 命令。本节解析 BashTool 如何通过 AST 解析和多层安全机制在强大与安全之间取得平衡。</p>
+
+  <div class="step-card">
+    <div class="step-badge">1</div>
+    <div>
+      <h4>AST 解析检测危险命令</h4>
+      <p>BashTool 不是用正则表达式匹配危险命令，而是将 shell 命令解析为 AST（抽象语法树），精确识别 <code>rm -rf</code>、<code>curl | sh</code> 等危险模式，避免正则匹配的误报和漏报。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">2</div>
+    <div>
+      <h4>多层安全防御</h4>
+      <p>安全不是单一防线：① AST 解析检测危险模式 → ② 只读命令白名单 → ③ 权限系统询问用户 → ④ 沙盒环境隔离。任何一层拦截都能阻止危险操作。</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">3</div>
+    <div>
+      <h4>输出截断策略</h4>
+      <p>命令输出可能极长（如 <code>find /</code>），BashTool 会截断过长输出并保留头尾，告知模型输出被截断，避免撑爆上下文窗口。</p>
+    </div>
+  </div>
+
+  <div class="callout-accent">
+    <strong>关键洞察：</strong> 安全性不能依赖单一机制——AST 解析可能遗漏新模式，权限询问可能被用户误批准，只有多层防御才能构建可靠的安全体系。
+  </div>
+
+  <h3>💻 核心代码</h3>
+  <pre><code class="language-typescript">// BashTool 安全检查流程简化版
+async function executeBash(command: string): Promise&lt;ToolResult&gt; {
+  // 1. AST 解析，检测危险模式
+  const ast = parseShellScript(command);
+  const risks = detectDangerousPatterns(ast);
+
+  // 2. 只读命令白名单（ls, cat, grep 等直接放行）
+  if (isReadOnlyCommand(ast)) {
+    return executeInSandbox(command);
+  }
+
+  // 3. 有风险 → 请求用户授权
+  if (risks.length > 0) {
+    const approved = await requestPermission("Bash", command, risks);
+    if (!approved) return { error: "用户拒绝执行" };
+  }
+
+  // 4. 在沙盒中执行
+  return executeInSandbox(command);
+}</code></pre>
+
+  <h3>🎯 知识检测</h3>
+  <div class="quiz-card" data-correct="0" data-explanation-0="正确！AST（抽象语法树）解析能精确理解命令的语法结构，比正则表达式更准确地识别危险模式。" data-explanation-1="正则表达式容易产生误报和漏报，不够精确。" data-explanation-2="关键词匹配太粗暴，无法理解命令的语义结构。">
+    <p class="quiz-question">BashTool 用什么技术检测危险命令？</p>
+    <div class="quiz-options">
+      <button class="quiz-option">AST（抽象语法树）解析</button>
+      <button class="quiz-option">正则表达式匹配</button>
+      <button class="quiz-option">关键词黑名单</button>
+    </div>
+  </div>
+
+  <h3>🔑 关键术语</h3>
+  <p>本节涉及的关键概念：<span class="term" data-definition="Abstract Syntax Tree，将代码/命令解析为树状结构，精确表示语法关系">AST</span>，<span class="term" data-definition="隔离执行环境，限制命令对系统的访问权限，防止恶意操作">沙盒</span>，<span class="term" data-definition="当命令输出超过长度限制时，保留头尾并标记截断，防止占用过多上下文">输出截断</span></p>
+
+  <div class="callout-info">
+    📖 <strong>完整学习指南：</strong> <a href="../week-02/day-08-bash-tool.md">查看详细版 Markdown 指南 →</a>
+  </div>
+</section>
