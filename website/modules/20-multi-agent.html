@@ -1,82 +1,78 @@
-<section class="module" id="module-20" data-module="Day 20: 多 Agent 系统 — Team · Swarm · Coordinator · Worktree">
-  <h2>Day 20: 多 Agent 系统 — Team · Swarm · Coordinator · Worktree</h2>
-  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+<section class="module" id="module-20" data-module="Day 20: 多 Agent">
+<div class="module-inner">
 
-  <p>单个 Agent 的能力有上限——真正复杂的项目需要多个 Agent 协作。本节解析多 Agent 系统的两种模式（Team 和 Swarm），以及 Git Worktree 如何隔离并行操作。</p>
+  <h2>Day 20: 多 Agent</h2>
+  <p class="module-meta">🔴高级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>Team 模式：Coordinator 分层协作</h4>
-      <p>Team 模式有一个 Coordinator（协调者）负责任务分解和分配。Coordinator 将大任务拆分为子任务，分配给多个 Worker Agent，收集结果后整合。适合有明确层级的复杂项目。</p>
+  <p>当任务规模超出单个 Agent 的能力时，多 Agent 协作登场。Claude Code 支持 Team 模式和 Swarm 模式两种协作架构，并通过 Git Worktree 实现文件隔离。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Team 模式：Coordinator 协调</strong>
+        <p>Team 模式有一个 Coordinator（协调者）Agent 负责分配任务、汇总结果。Worker Agent 各司其职，最终由 Coordinator 整合输出。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>Swarm 模式：对等 Agent 网络</h4>
-      <p>Swarm 模式中所有 Agent 是对等的，没有中心协调者。Agent 之间通过共享状态（如文件系统）进行隐式协作。适合松耦合的并行任务。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Swarm 模式：对等协作</strong>
+        <p>Swarm 模式中所有 Agent 地位平等，通过共享消息总线通信。每个 Agent 自主决定接手哪些子任务，适合探索性工作。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>Git Worktree 隔离并行操作</h4>
-      <p>多个 Agent 同时修改代码会产生冲突。Git Worktree 为每个 Agent 创建独立的工作目录（共享同一个 .git 仓库），每个 Agent 在自己的分支上工作，最后合并。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Git Worktree 隔离</strong>
+        <p>多个 Agent 同时修改代码会产生冲突。Git Worktree 为每个 Agent 创建独立的工作目录，让它们在同一仓库的不同分支上并行工作。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> Git Worktree 是多 Agent 并行编码的关键基础设施——它解决了「多个 Agent 同时编辑同一个文件」的根本冲突问题。
+    <strong>关键洞察：</strong> Git Worktree 是多 Agent 并行编码的关键——没有文件隔离，多个 Agent 修改同一文件必然产生冲突。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// Coordinator 模式简化版
-async function coordinatorLoop(task: string, workerCount: number) {
-  // 1. Coordinator 分解任务
-  const subtasks = await decompose(task);
+  <pre><code class="language-typescript">// Coordinator 协调者模式
+class Coordinator {
+  private workers: Agent[] = [];
 
-  // 2. 为每个 Worker 创建独立的 Git Worktree
-  const worktrees = await Promise.all(
-    subtasks.map((_, i) =&gt;
-      exec(`git worktree add ../worker-${i} -b worker-branch-${i}`)
-    )
-  );
+  async dispatch(task: string): Promise&lt;string&gt; {
+    // 分解任务
+    const subtasks = await this.plan(task);
 
-  // 3. 并行启动 Worker Agent
-  const results = await Promise.all(
-    subtasks.map((subtask, i) =&gt; {
-      const worker = new AgentWorker({
-        cwd: worktrees[i].path,  // 各自独立的工作目录
-        task: subtask,
-      });
-      return worker.run();
-    })
-  );
+    // 为每个子任务创建 Worktree
+    const results = await Promise.all(
+      subtasks.map(async (sub) =&gt; {
+        const worktree = await createWorktree(sub.branch);
+        const worker = new Agent({ cwd: worktree });
+        return worker.execute(sub.description);
+      })
+    );
 
-  // 4. 合并所有 Worker 的结果
-  for (const worktree of worktrees) {
-    await exec(`git merge ${worktree.branch}`);
-    await exec(`git worktree remove ${worktree.path}`);
+    // 汇总结果
+    return this.summarize(results);
   }
 }</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="2" data-explanation-0="文件锁会导致 Agent 等待，降低并行效率。" data-explanation-1="按时间轮换（时间片）不适合 Agent 的工作模式，每个 Agent 需要完整的上下文。" data-explanation-2="正确！Git Worktree 为每个 Agent 创建独立的工作目录和分支，Agent 在各自的空间工作互不干扰，最后通过 Git 合并。">
-    <p class="quiz-question">多 Agent 并行修改代码时如何避免冲突？</p>
+  <div class="quiz-card" data-correct="2" data-explanation-0="锁文件不适合并行编辑场景" data-explanation-1="独立仓库会丢失代码关联" data-explanation-2="正确！Worktree 让每个 Agent 在独立目录中工作，避免冲突">
+    <p class="quiz-question">多 Agent 场景下怎么避免文件冲突？</p>
     <div class="quiz-options">
-      <button class="quiz-option">使用文件锁</button>
-      <button class="quiz-option">按时间轮换执行</button>
-      <button class="quiz-option">使用 Git Worktree 创建独立工作目录</button>
+      <button class="quiz-option">文件锁</button>
+      <button class="quiz-option">独立仓库</button>
+      <button class="quiz-option">Git Worktree</button>
     </div>
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="有中心协调者（Coordinator）负责任务分解、分配和结果整合的多 Agent 协作模式">Team 模式</span>，<span class="term" data-definition="所有 Agent 对等、无中心协调者、通过共享状态隐式协作的多 Agent 模式">Swarm 模式</span>，<span class="term" data-definition="Git 功能，为同一仓库创建多个独立工作目录，每个目录可以在不同分支上工作">Git Worktree</span></p>
+  <p>本节关键概念：<span class="term" data-definition="由 Coordinator 统一分配任务和汇总结果的协作模式">Team 模式</span>，<span class="term" data-definition="所有 Agent 地位平等、自主协作的模式">Swarm 模式</span>，<span class="term" data-definition="Git 特性，为同一仓库创建多个独立工作目录">Git Worktree</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-03/day-20-multi-agent.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

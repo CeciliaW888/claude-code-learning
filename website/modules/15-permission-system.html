@@ -1,78 +1,82 @@
-<section class="module" id="module-15" data-module="Day 15: 权限系统 — 多层安全 · 权限模式 · 沙盒">
-  <h2>Day 15: 权限系统 — 多层安全 · 权限模式 · 沙盒</h2>
-  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+<section class="module" id="module-15" data-module="Day 15: 权限系统">
+<div class="module-inner">
 
-  <p>权限系统是 Claude Code 安全架构的核心。本节解析四种权限模式的设计理念、多层防御机制，以及 CLAUDE.md 中的权限规则如何与代码层面的安全检查协同工作。</p>
+  <h2>Day 15: 权限系统</h2>
+  <p class="module-meta">🔴高级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>四种权限模式</h4>
-      <p><strong>default</strong>：危险操作逐次询问用户；<strong>plan</strong>：只允许读取操作，所有写入操作需确认（最安全）；<strong>auto</strong>：自动批准大多数操作；<strong>bypass</strong>：完全跳过权限检查（仅开发环境）。</p>
+  <p>权限系统是 Claude Code 安全架构的核心。它通过多层防御机制确保 AI 不会执行未经授权的操作，同时在安全与效率之间找到平衡。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>4 种权限模式</strong>
+        <p>Claude Code 提供四种运行模式：plan（只读规划）、ask（需确认）、auto（自动执行）和 custom（自定义规则）。安全性从高到低递减。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>多层安全防御</h4>
-      <p>安全检查从外到内层层递进：① CLAUDE.md 规则（禁止特定操作）→ ② 权限模式（决定是否询问）→ ③ 工具级检查（AST 解析等）→ ④ 沙盒隔离（限制系统访问）。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>多层防御</strong>
+        <p>权限检查贯穿多个层级：工具级别（工具本身的权限声明）、会话级别（当前模式配置）、用户级别（全局安全规则）。任意一层拒绝即阻止操作。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>CLAUDE.md 权限规则</h4>
-      <p>用户可以在 CLAUDE.md 中定义权限规则，如「永远不要删除文件」「只在 src/ 目录下编辑」等。这些规则在权限检查时被读取并强制执行。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>CLAUDE.md 权限规则</strong>
+        <p>通过 CLAUDE.md 可以定义项目级权限规则，如禁止删除特定目录、限制网络访问等，让安全策略与项目需求匹配。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> plan 模式是代码审查的最佳搭档——Claude 只能读取和分析代码，所有修改操作都需要人工确认，确保每一个变更都经过人类审批。
+    <strong>关键洞察：</strong> 好的权限系统不是一味限制——而是让安全操作尽量自动化，仅对高风险操作要求人工确认。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// 权限检查流程简化版
+  <pre><code class="language-typescript">// 权限检查逻辑
+type PermissionMode = "plan" | "ask" | "auto" | "custom";
+
 async function checkPermission(
-  toolName: string,
+  tool: ToolDef,
   input: unknown,
   mode: PermissionMode
 ): Promise&lt;boolean&gt; {
-  // 1. CLAUDE.md 规则检查
-  const rules = loadPermissionRules();
-  if (rules.isDenied(toolName, input)) {
-    return false;  // 被 CLAUDE.md 规则明确禁止
+  // plan 模式：只允许只读操作
+  if (mode === "plan" &amp;&amp; tool.sideEffects) {
+    return false;
   }
 
-  // 2. 权限模式检查
-  switch (mode) {
-    case "bypass": return true;           // 跳过所有检查
-    case "auto":   return true;           // 自动批准
-    case "plan":
-      return isReadOnlyTool(toolName);    // 只允许读取
-    case "default":
-      if (isReadOnlyTool(toolName)) return true;
-      return await promptUser(            // 询问用户
-        `允许 ${toolName} 执行此操作？`
-      );
+  // ask 模式：需要用户确认
+  if (mode === "ask") {
+    return await promptUser(`允许执行 ${tool.name}?`);
   }
+
+  // auto 模式：自动放行（仅限已信任工具）
+  if (mode === "auto" &amp;&amp; tool.trusted) {
+    return true;
+  }
+
+  return await promptUser(`确认执行?`);
 }</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="1" data-explanation-0="default 模式会询问用户，但仍允许写入操作。" data-explanation-1="正确！plan 模式只允许读取操作，所有写入/修改操作都需要用户明确确认，是最安全的模式。" data-explanation-2="auto 模式会自动批准大多数操作，安全性最低（bypass 除外）。">
-    <p class="quiz-question">哪个权限模式最安全？</p>
+  <div class="quiz-card" data-correct="1" data-explanation-0="auto 模式自动执行，安全性最低" data-explanation-1="正确！plan 模式只允许只读操作，安全性最高" data-explanation-2="ask 模式需要确认，安全性中等">
+    <p class="quiz-question">哪种权限模式最安全？</p>
     <div class="quiz-options">
-      <button class="quiz-option">default</button>
-      <button class="quiz-option">plan</button>
       <button class="quiz-option">auto</button>
+      <button class="quiz-option">plan</button>
+      <button class="quiz-option">ask</button>
     </div>
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="控制 Agent 操作权限的四种模式：default（逐次询问）、plan（只读）、auto（自动批准）、bypass（跳过检查）">权限模式</span>，<span class="term" data-definition="从 CLAUDE.md 规则到工具级检查的多重安全检查机制，任一层拦截即可阻止操作">多层防御</span>，<span class="term" data-definition="限制程序对操作系统资源访问的隔离环境，防止恶意代码影响宿主系统">沙盒</span></p>
+  <p>本节关键概念：<span class="term" data-definition="plan/ask/auto/custom 四种运行模式">权限模式</span>，<span class="term" data-definition="多层级独立检查，任一层拒绝即阻止的安全策略">多层防御</span>，<span class="term" data-definition="在 CLAUDE.md 中定义的项目特有安全规则">权限规则</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-03/day-15-permission-system.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

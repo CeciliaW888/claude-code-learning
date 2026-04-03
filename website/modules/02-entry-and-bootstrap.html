@@ -1,68 +1,71 @@
-<section class="module" id="module-2" data-module="Day 2: 入口与启动 — CLI 解析 · 并行预加载 · 状态初始化">
-  <h2>Day 2: 入口与启动 — CLI 解析 · 并行预加载 · 状态初始化</h2>
-  <p class="module-meta">🟢 入门 · 预计时间: 1小时</p>
+<section class="module" id="module-2" data-module="Day 2: 入口与启动">
+<div class="module-inner">
 
-  <p>当你在终端输入 <code>claude</code> 命令时，背后发生了什么？本节解析从 CLI 入口到完成初始化的完整启动流程，揭示启动性能优化的关键技巧。</p>
+  <h2>Day 2: 入口与启动</h2>
+  <p class="module-meta">🟢入门 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>Commander.js 参数解析</h4>
-      <p>入口文件使用 Commander.js 解析命令行参数（如 <code>--model</code>、<code>--print</code>），将用户的 CLI 输入转化为结构化的配置对象。</p>
+  <p>当你在终端输入 claude 命令时，背后发生了什么？本节将解析 CLI 入口、参数解析、并行预加载策略以及核心 State 对象的初始化过程。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Commander.js 参数解析</strong>
+        <p>使用 Commander.js 库解析命令行参数，支持 --model、--verbose 等选项，将用户输入转换为结构化配置对象。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>并行预加载优化启动</h4>
-      <p>启动时使用 <code>Promise.all()</code> 并行加载配置文件、检查权限、初始化 API 客户端等任务，而非串行执行，显著减少启动时间。关键模块使用动态 <code>import()</code> 延迟加载。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>并行预加载</strong>
+        <p>启动时并行执行多个初始化任务（加载配置、检查认证、读取 CLAUDE.md），而非串行等待，大幅缩短启动时间。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>State 对象管理会话</h4>
-      <p>初始化完成后创建全局 State 对象，包含当前会话的所有状态：消息历史、工具配置、权限设置等。State 贯穿整个应用生命周期。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>State 对象</strong>
+        <p>所有运行时状态集中在一个 State 对象中管理，包括消息历史、当前模型、工具列表等，是整个应用的数据中心。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> 动态 <code>import()</code> 是启动优化的核心策略——只在需要时才加载模块，避免启动时加载全部 30+ 个工具的开销。
+    <strong>关键洞察：</strong> 并行预加载是 Claude Code 启动速度快的关键——多个独立任务同时执行，而不是排队等待。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// CLI 入口简化版 (main.tsx)
+  <pre><code class="language-typescript">// CLI 入口简化示意
 import { Command } from "commander";
 
 const program = new Command()
-  .name("claude")
-  .option("-p, --print", "非交互模式，直接输出")
   .option("--model &lt;model&gt;", "指定模型")
+  .option("--verbose", "详细输出")
   .parse(process.argv);
 
-// 并行预加载关键资源
-const [config, permissions, apiClient] = await Promise.all([
+// 并行预加载
+const [config, auth, claudeMd] = await Promise.all([
   loadConfig(),
-  checkPermissions(),
-  initApiClient(),
+  checkAuth(),
+  readClaudeMd(),
 ]);</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="2" data-explanation-0="代码压缩是打包优化，不是运行时启动优化。" data-explanation-1="缓存有助于后续启动，但不是首次启动的主要优化手段。" data-explanation-2="正确！动态 import() 让非必要模块在需要时才加载，大幅减少首次启动的模块解析时间。">
-    <p class="quiz-question">Claude Code 为什么在启动时使用动态 import()？</p>
+  <div class="quiz-card" data-correct="1" data-explanation-0="动态 import 的主要目的不是节省内存" data-explanation-1="正确！动态 import 按需加载模块，减少初始启动时间" data-explanation-2="代码安全性不是动态 import 的主要目的">
+    <p class="quiz-question">为什么 Claude Code 使用动态 import？</p>
     <div class="quiz-options">
-      <button class="quiz-option">为了压缩代码体积</button>
-      <button class="quiz-option">为了缓存模块</button>
-      <button class="quiz-option">为了减少启动时间，按需加载</button>
+      <button class="quiz-option">节省内存</button>
+      <button class="quiz-option">减少启动时间</button>
+      <button class="quiz-option">提高安全性</button>
     </div>
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="Node.js 的 CLI 参数解析库，将命令行参数转化为结构化选项">Commander.js</span>，<span class="term" data-definition="ES Module 的按需加载语法，只在代码执行到该处时才加载模块">动态 import()</span>，<span class="term" data-definition="保存当前会话所有状态（消息、配置、权限等）的全局对象">State 对象</span></p>
+  <p>本节关键概念：<span class="term" data-definition="Node.js 命令行参数解析库">Commander.js</span>，<span class="term" data-definition="使用 Promise.all 同时执行多个初始化任务">并行预加载</span>，<span class="term" data-definition="集中管理应用运行时数据的核心对象">State 对象</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-01/day-02-entry-and-bootstrap.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

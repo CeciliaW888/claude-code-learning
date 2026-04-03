@@ -1,42 +1,44 @@
-<section class="module" id="module-13" data-module="Day 13: 子 Agent 工具 — Agent调用Agent · 前台/后台">
-  <h2>Day 13: 子 Agent 工具 — Agent 调用 Agent · 前台/后台</h2>
-  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+<section class="module" id="module-13" data-module="Day 13: 子 Agent">
+<div class="module-inner">
 
-  <p>当任务过于复杂，一个 Agent 不够用时，Claude Code 允许主 Agent 派生子 Agent 来并行处理子任务。本节解析子 Agent 的创建、通信和生命周期管理。</p>
+  <h2>Day 13: 子 Agent</h2>
+  <p class="module-meta">🔴高级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>主 Agent 派生子 Agent</h4>
-      <p>AgentTool 是一个特殊的工具——它的执行逻辑是启动一个新的 Agent 实例。子 Agent 拥有独立的消息列表和工具集，但共享同一个项目上下文。主 Agent 可以给子 Agent 分配具体的子任务。</p>
+  <p>Claude Code 可以让一个 Agent 调用另一个 Agent——子 Agent 模式。这种递归调用实现了复杂任务的分解与并行处理。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Agent 调用 Agent</strong>
+        <p>主 Agent 可以将子任务委托给子 Agent 处理。子 Agent 拥有独立的消息历史和工具集，执行完毕后将结果返回给主 Agent。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>2 分钟自动后台化</h4>
-      <p>子 Agent 默认在前台运行（用户可以看到其输出）。如果执行超过 2 分钟，会自动转入后台，避免阻塞主 Agent 的交互。用户可以随时查看后台任务的状态。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>2 分钟后台化</strong>
+        <p>子 Agent 默认在前台运行。如果执行时间超过 2 分钟，系统自动将其转为后台任务，主 Agent 可以继续处理其他工作。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>独立消息列表</h4>
-      <p>子 Agent 维护自己的消息列表，不会污染主 Agent 的对话历史。子 Agent 完成后，只将最终结果（而非全部对话）返回给主 Agent，保持主对话的上下文精简。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>独立消息历史</strong>
+        <p>子 Agent 拥有自己的消息列表，与主 Agent 隔离。这避免了上下文污染，让子 Agent 专注于分配的子任务。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> 子 Agent 的独立消息列表设计是关键——如果子 Agent 的所有中间对话都加入主 Agent 的上下文，会迅速撑爆上下文窗口。
+    <strong>关键洞察：</strong> 子 Agent 的 2 分钟后台化机制平衡了用户体验和任务效率——短任务即时返回，长任务不阻塞主流程。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// AgentTool 简化版
+  <pre><code class="language-typescript">// AgentTool 子 Agent 实现
 const AgentTool: ToolDef = {
-  name: "Agent",
-  description: "启动子 Agent 处理独立的子任务",
+  name: "agent",
+  description: "启动子 Agent 处理独立子任务",
   inputSchema: {
     type: "object",
     properties: {
@@ -44,36 +46,33 @@ const AgentTool: ToolDef = {
     },
     required: ["task"],
   },
-  async execute({ task }) {
-    const subAgent = new QueryEngine({
-      messages: [{ role: "user", content: task }],
-      tools: getSubAgentTools(),  // 子 Agent 可用的工具子集
-    });
+  call: async ({ task }) =&gt; {
+    const subMessages: Message[] = [
+      { role: "user", content: task },
+    ];
 
-    // 设置 2 分钟超时自动后台化
-    const timeout = setTimeout(() =&gt; subAgent.moveToBackground(), 2 * 60 * 1000);
-
-    const result = await subAgent.run();
-    clearTimeout(timeout);
-
-    return { output: result.summary };  // 只返回摘要给主 Agent
+    // 子 Agent 独立循环
+    const result = await query(subMessages, tools);
+    return { content: result };
   },
 };</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="1" data-explanation-0="30 秒太短，子 Agent 很多任务需要更多时间。" data-explanation-1="正确！子 Agent 前台运行超过 2 分钟后自动转入后台，避免阻塞主 Agent 的交互。" data-explanation-2="5 分钟太长，会阻塞用户交互体验。">
-    <p class="quiz-question">子 Agent 在前台运行多久后会自动转入后台？</p>
+  <div class="quiz-card" data-correct="2" data-explanation-0="30 秒太短，大多数任务还没完成" data-explanation-1="1 分钟不是默认阈值" data-explanation-2="正确！超过 2 分钟自动转为后台执行">
+    <p class="quiz-question">子 Agent 执行多久后会自动转为后台？</p>
     <div class="quiz-options">
       <button class="quiz-option">30 秒</button>
+      <button class="quiz-option">1 分钟</button>
       <button class="quiz-option">2 分钟</button>
-      <button class="quiz-option">5 分钟</button>
     </div>
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="由主 Agent 通过 AgentTool 派生的独立 Agent 实例，有自己的消息列表和工具集">子 Agent</span>，<span class="term" data-definition="任务在前台可见地运行，超时后自动切换到后台静默执行">自动后台化</span>，<span class="term" data-definition="子 Agent 有自己独立的对话历史，完成后只将结果摘要返回给主 Agent">独立消息列表</span></p>
+  <p>本节关键概念：<span class="term" data-definition="被主 Agent 委托执行独立子任务的嵌套 Agent">子 Agent</span>，<span class="term" data-definition="超时任务自动转为后台执行的机制">后台化</span>，<span class="term" data-definition="子 Agent 拥有独立的对话上下文，与主 Agent 隔离">消息隔离</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-02/day-13-agent-tool.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

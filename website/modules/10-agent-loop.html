@@ -1,80 +1,78 @@
-<section class="module" id="module-10" data-module="Day 10: Agent 循环 — QueryEngine · query() · 流式响应">
-  <h2>Day 10: Agent 循环 — QueryEngine · query() · 流式响应</h2>
-  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+<section class="module" id="module-10" data-module="Day 10: Agent 循环">
+<div class="module-inner">
 
-  <p>Agent 循环是 Claude Code 的心脏。本节深入 query.ts 中的 <code>while(true)</code> 循环，解析 QueryEngine 如何驱动「调用 API → 解析响应 → 执行工具 → 再次调用」的无限循环。</p>
+  <h2>Day 10: Agent 循环</h2>
+  <p class="module-meta">🔴高级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>QueryEngine：每轮对话的控制器</h4>
-      <p>QueryEngine 封装了一次完整对话的逻辑：管理消息列表、调用 Claude API、处理流式响应、分发 tool_use 给对应的工具执行。</p>
+  <p>Agent 循环是 Claude Code 的心脏。它决定了 AI 如何持续思考、调用工具并最终给出答案。理解 query() 函数和流式响应机制，是掌握 Agent 系统的核心。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>QueryEngine 引擎</strong>
+        <p>QueryEngine 封装了与 Claude API 的交互逻辑，管理消息历史、工具定义和模型配置，是 Agent 循环的控制中枢。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>query() 的 while(true) 循环</h4>
-      <p>核心的 <code>query()</code> 函数是一个 <code>while(true)</code> 循环：每次迭代调用 API，如果响应包含 tool_use 就执行工具并将结果加入消息列表继续循环，直到模型返回 <code>end_turn</code> 才跳出。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>while(true) 循环</strong>
+        <p>Agent 循环的核心是一个 while(true)：调用 API → 检查响应 → 如果有工具调用则执行并继续，如果是 end_turn 则退出循环。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>流式响应处理</h4>
-      <p>API 调用使用流式（streaming）模式，模型生成的文本和 tool_use 实时传回。这让用户能看到「Claude 正在思考」的实时输出，而非等待完整响应。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>流式响应</strong>
+        <p>使用 Server-Sent Events 实现流式输出，让用户实时看到 AI 的思考过程，而非等待完整响应。提升感知速度和交互体验。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> <code>while(true)</code> 不是死循环——模型的 <code>stop_reason === "end_turn"</code> 是自然退出条件。Agent 的智能在于模型自己决定何时停止调用工具。
+    <strong>关键洞察：</strong> Agent 不是单次问答——它是一个 while(true) 循环，不断调用工具直到任务完成，这正是"Agent"与"Chatbot"的本质区别。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// query() 核心循环简化版
+  <pre><code class="language-typescript">// query() 核心循环
 async function query(messages: Message[], tools: ToolDef[]) {
   while (true) {
-    // 1. 调用 Claude API（流式）
-    const stream = await client.messages.stream({
+    const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       messages,
-      tools: tools.map(toApiTool),
+      tools: tools.map(toAPIDef),
+      stream: true,
     });
 
-    const response = await stream.finalMessage();
+    // 处理流式响应
+    for await (const event of response) {
+      handleStreamEvent(event);
+    }
 
-    // 2. 检查是否需要调用工具
-    const toolUseBlocks = response.content
-      .filter(b =&gt; b.type === "tool_use");
+    if (response.stop_reason === "end_turn") break;
 
-    // 3. 没有 tool_use → 对话结束
-    if (toolUseBlocks.length === 0) break;
-
-    // 4. 执行所有工具，收集结果
-    messages.push({ role: "assistant", content: response.content });
-    const results = await Promise.all(
-      toolUseBlocks.map(block =&gt; executeTool(block))
-    );
-    messages.push({ role: "user", content: results });
+    // 执行工具调用，结果加入消息历史
+    await executeToolCalls(response, messages);
   }
 }</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="0" data-explanation-0="正确！query() 的核心是一个 while(true) 循环，每次迭代调用 API 并检查是否有 tool_use，直到模型返回 end_turn。" data-explanation-1="递归调用可以实现但不是实际采用的方式，while(true) 更直观且避免栈溢出。" data-explanation-2="事件驱动不是 Agent 循环的主要模式，它是同步的请求-响应循环。">
-    <p class="quiz-question">Agent 循环在 query.ts 中使用什么结构实现？</p>
+  <div class="quiz-card" data-correct="1" data-explanation-0="递归调用不是 Agent 循环的实现方式" data-explanation-1="正确！while(true) 循环直到 stop_reason 为 end_turn" data-explanation-2="事件驱动是响应处理方式，不是循环结构">
+    <p class="quiz-question">Agent 循环的核心是什么结构？</p>
     <div class="quiz-options">
-      <button class="quiz-option">while(true) 循环，end_turn 时 break</button>
-      <button class="quiz-option">递归函数调用</button>
-      <button class="quiz-option">事件驱动回调</button>
+      <button class="quiz-option">递归调用</button>
+      <button class="quiz-option">while(true) 循环</button>
+      <button class="quiz-option">事件驱动</button>
     </div>
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="封装一次完整对话逻辑的控制器，管理消息、API 调用和工具执行">QueryEngine</span>，<span class="term" data-definition="API 实时返回部分结果而非等待完整生成，让用户看到实时输出">流式响应</span>，<span class="term" data-definition="模型返回的停止原因，end_turn 表示对话结束，tool_use 表示需要执行工具">stop_reason</span></p>
+  <p>本节关键概念：<span class="term" data-definition="封装 API 交互和循环控制的核心引擎">QueryEngine</span>，<span class="term" data-definition="持续循环调用 API 和工具直到任务完成的模式">Agent 循环</span>，<span class="term" data-definition="使用 SSE 实时传输 AI 响应内容的技术">流式响应</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-02/day-10-agent-loop.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

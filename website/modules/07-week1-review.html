@@ -1,83 +1,69 @@
-<section class="module" id="module-7" data-module="Day 7: 第一周回顾 — 知识图谱 · Mini Agent CLI">
-  <h2>Day 7: 第一周回顾 — 知识图谱 · Mini Agent CLI</h2>
-  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+<section class="module" id="module-7" data-module="Day 7: 第一周回顾">
+<div class="module-inner">
 
-  <p>第一周我们建立了 Claude Code 的全景认知：从架构到启动、从 UI 到输入、从工具到消息。本节通过知识图谱串联六天所学，并动手构建一个 Mini Agent CLI。</p>
+  <h2>Day 7: 第一周回顾</h2>
+  <p class="module-meta">🟡中级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>六天知识总结图谱</h4>
-      <p>Day 1 架构总览 → Day 2 启动流程 → Day 3 终端 UI → Day 4 REPL 输入 → Day 5 Tool 系统 → Day 6 消息类型。这些知识构成了理解 Claude Code 的基础框架。</p>
+  <p>恭喜完成第一周学习！本节将串联前 6 天的知识点，构建完整的知识图谱，并通过一个 Mini Agent 项目将理论付诸实践。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>知识图谱</strong>
+        <p>将三层架构、启动流程、UI 渲染、REPL 循环、Tool 系统和消息类型串联起来，形成从「用户输入」到「AI 响应」的完整链路。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>知识连接</h4>
-      <p>启动流程（Day 2）初始化 State，State 驱动 REPL（Day 4），REPL 收集输入后触发 Agent 循环，循环中使用 Tool 系统（Day 5）并通过消息（Day 6）与 API 通信。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Mini Agent 项目</strong>
+        <p>动手构建一个最小可用的 Agent CLI：接收用户输入、调用 Claude API、执行工具、返回结果。麻雀虽小，五脏俱全。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>Mini Agent CLI 项目</h4>
-      <p>用 Week 1 学到的知识构建一个最小可运行的 Agent CLI：接收用户输入 → 调用 Claude API → 解析 tool_use → 执行工具 → 返回结果。麻雀虽小，五脏俱全。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>查漏补缺</strong>
+        <p>回顾每天的关键概念和代码示例，确认理解程度。标记不确定的知识点，在后续学习中重点关注。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> 理解架构不是目的，能动手构建才是真正掌握。Mini Agent CLI 项目将 6 天的概念落地为可运行的代码。
+    <strong>关键洞察：</strong> 理论与实践结合是最佳学习方式——Mini Agent 项目让你亲手体验 Agent 循环的完整流程。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// Mini Agent CLI 核心循环
+  <pre><code class="language-typescript">// Mini Agent 框架
 import Anthropic from "@anthropic-ai/sdk";
-import * as readline from "readline";
 
 const client = new Anthropic();
-const messages: Message[] = [];
 
-async function agentLoop(userInput: string) {
-  messages.push({ role: "user", content: userInput });
+async function miniAgent(prompt: string) {
+  const messages: Message[] = [
+    { role: "user", content: prompt }
+  ];
 
   while (true) {
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
       messages,
-      tools: myTools,  // 你定义的工具列表
+      tools: myTools,
     });
 
-    // 没有 tool_use → 对话结束
-    if (response.stop_reason === "end_turn") {
-      console.log(extractText(response));
-      break;
-    }
+    if (response.stop_reason === "end_turn") break;
 
-    // 有 tool_use → 执行工具 → 继续循环
-    const toolResults = await executeTools(response);
-    messages.push({ role: "assistant", content: response.content });
-    messages.push({ role: "user", content: toolResults });
+    // 处理工具调用...
   }
 }</code></pre>
 
-  <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="2" data-explanation-0="日志系统重要，但不是 Agent 循环的最小必要组件。" data-explanation-1="UI 框架是表现层的事，最小 Agent 不需要 Ink。" data-explanation-2="正确！一个最小 Agent 需要接收输入、调用 API、执行工具并循环——这就是 Agent 循环的本质。">
-    <p class="quiz-question">构建最小可运行的 Agent CLI，最核心的部分是什么？</p>
-    <div class="quiz-options">
-      <button class="quiz-option">完善的日志系统</button>
-      <button class="quiz-option">Ink 终端 UI 框架</button>
-      <button class="quiz-option">输入 → API 调用 → 工具执行的循环</button>
-    </div>
-  </div>
-
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="将多个知识点以节点和边的形式可视化展示其关联关系的图表">知识图谱</span>，<span class="term" data-definition="最小可运行的 Agent 命令行工具，包含输入→API→工具→循环的核心功能">Mini Agent CLI</span>，<span class="term" data-definition="模型调用 API 后检查是否有 tool_use，如果有则执行工具并继续循环的核心流程">Agent 循环</span></p>
+  <p>本节关键概念：<span class="term" data-definition="将分散知识点串联成完整体系的可视化方法">知识图谱</span>，<span class="term" data-definition="最小可用的 Agent 命令行工具项目">Mini Agent</span>，<span class="term" data-definition="检查并补充遗漏知识点的学习方法">查漏补缺</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-01/day-07-week1-review.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

@@ -1,7 +1,7 @@
 {
   "name": "Claude Code 源码解析：21天学习路径",
   "short_name": "CC学习",
-  "description": "基于泄露源码，21天构建 AI Agent CLI 工具",
+  "description": "基于 Claude Code 源码，21天构建 AI Agent CLI 工具",
   "start_url": "./index.html",
   "scope": "./",
   "id": "./",

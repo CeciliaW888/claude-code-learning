@@ -1,62 +1,66 @@
-<section class="module" id="module-12" data-module="Day 12: 上下文压缩 — Snip · MicroCompact · Full Compact">
-  <h2>Day 12: 上下文压缩 — Snip · MicroCompact · Full Compact</h2>
-  <p class="module-meta">🔴 高级 · 预计时间: 1小时</p>
+<section class="module" id="module-12" data-module="Day 12: 上下文压缩">
+<div class="module-inner">
 
-  <p>上下文窗口是有限的资源。当对话越来越长，Claude Code 需要在不丢失关键信息的前提下压缩上下文。本节解析三级压缩策略和 token 预算管理。</p>
+  <h2>Day 12: 上下文压缩</h2>
+  <p class="module-meta">🔴高级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>三级压缩策略</h4>
-      <p><strong>Snip</strong>：移除工具输出中的冗余内容（如超长文件内容）；<strong>MicroCompact</strong>：对旧消息做轻度摘要，保留关键信息；<strong>Full Compact</strong>：对整个对话做深度压缩，只保留核心要点。</p>
+  <p>当对话变长，token 数逼近上下文窗口限制时，压缩机制自动启动。Claude Code 设计了三级压缩策略，在保留关键信息的同时控制成本。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>三级压缩：Snip / MicroCompact / FullCompact</strong>
+        <p>Snip 移除工具输出的冗余部分；MicroCompact 压缩早期对话；FullCompact 对整个对话历史进行摘要重写。三级递进，逐步加大压缩力度。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>80% 阈值自动触发</h4>
-      <p>当 token 使用量达到上下文窗口的 80% 时，系统自动触发压缩。这个阈值确保在压缩完成前仍有足够空间继续对话，不会因为等待压缩而中断。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>80% 阈值触发</strong>
+        <p>当 token 使用量达到上下文窗口的 80% 时，自动触发压缩。留出 20% 的余量，确保后续对话有足够空间。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>Token 预算管理</h4>
-      <p>系统实时追踪每条消息的 token 数量，包括 system prompt、用户消息、助手回复和工具结果。预算管理确保每次 API 调用都在上下文窗口限制内。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Token 预算管理</strong>
+        <p>系统持续追踪 token 消耗，为 System Prompt、工具描述、对话历史分配预算，确保每个部分都在合理范围内。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> 压缩是一个信息取舍的过程——Snip 去除明确冗余的内容，MicroCompact 保留信息骨架，Full Compact 只保留「模型继续工作所需的最少信息」。
+    <strong>关键洞察：</strong> 压缩不是简单截断——它是智能摘要，保留关键决策和上下文，丢弃冗余的中间过程。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// 压缩决策逻辑简化版
-function shouldCompress(state: ConversationState): CompressionLevel {
-  const usage = state.totalTokens / state.maxContextTokens;
-
-  if (usage &lt; 0.5) return "none";        // 50% 以下不压缩
-  if (usage &lt; 0.7) return "snip";         // 50-70% 轻度裁剪
-  if (usage &lt; 0.8) return "micro";        // 70-80% 微压缩
-  return "full";                           // 80%+ 全量压缩
+  <pre><code class="language-typescript">// 上下文压缩逻辑
+function shouldCompress(messages: Message[], limit: number): boolean {
+  const totalTokens = countTokens(messages);
+  return totalTokens &gt; limit * 0.8;  // 80% 阈值
 }
 
-async function fullCompact(messages: Message[]): Promise&lt;Message[]&gt; {
-  // 用 Claude 自己来摘要对话历史
-  const summary = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    messages: [{ role: "user", content:
-      `请摘要以下对话的关键信息，保留所有重要的文件路径、决策和未完成的任务：\n${formatMessages(messages)}`
-    }],
-  });
-  return [{ role: "user", content: `[对话摘要] ${summary}` }];
+async function compress(messages: Message[]): Promise&lt;Message[]&gt; {
+  // 第一级：Snip 冗余工具输出
+  let result = snipToolOutputs(messages);
+
+  if (stillOverLimit(result)) {
+    // 第二级：MicroCompact 早期对话
+    result = microCompact(result);
+  }
+
+  if (stillOverLimit(result)) {
+    // 第三级：FullCompact 全面摘要
+    result = await fullCompact(result);
+  }
+
+  return result;
 }</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="2" data-explanation-0="50% 时只做轻度 Snip 裁剪，不是全量压缩触发点。" data-explanation-1="70% 触发 MicroCompact，还不是全量压缩。" data-explanation-2="正确！当 token 使用达到上下文窗口的 80% 时，触发 Full Compact 全量压缩，确保对话能继续进行。">
-    <p class="quiz-question">Full Compact 压缩在 token 达到上下文窗口的多少时触发？</p>
+  <div class="quiz-card" data-correct="2" data-explanation-0="50% 太早触发，会频繁压缩影响质量" data-explanation-1="70% 不是默认阈值" data-explanation-2="正确！80% 是默认触发阈值，留 20% 余量">
+    <p class="quiz-question">上下文压缩在 token 使用达到多少时触发？</p>
     <div class="quiz-options">
       <button class="quiz-option">50%</button>
       <button class="quiz-option">70%</button>
@@ -65,9 +69,11 @@ async function fullCompact(messages: Message[]): Promise&lt;Message[]&gt; {
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="移除工具输出中的冗余内容（如超长文件、重复日志），最轻量级的压缩方式">Snip</span>，<span class="term" data-definition="对旧消息做轻度摘要，保留关键信息结构的中间级压缩">MicroCompact</span>，<span class="term" data-definition="对整个对话历史做深度摘要，只保留继续工作所需的最少信息">Full Compact</span></p>
+  <p>本节关键概念：<span class="term" data-definition="移除工具输出中冗余信息的轻量压缩">Snip</span>，<span class="term" data-definition="压缩早期对话内容的中级压缩">MicroCompact</span>，<span class="term" data-definition="对整个对话历史进行摘要重写的重度压缩">FullCompact</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-02/day-12-context-compression.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>

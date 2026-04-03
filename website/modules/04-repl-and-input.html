@@ -1,64 +1,69 @@
-<section class="module" id="module-4" data-module="Day 4: REPL 与输入 — 交互循环 · 斜杠命令 · Early Input">
-  <h2>Day 4: REPL 与输入 — 交互循环 · 斜杠命令 · Early Input</h2>
-  <p class="module-meta">🟡 中级 · 预计时间: 1小时</p>
+<section class="module" id="module-4" data-module="Day 4: REPL 与输入">
+<div class="module-inner">
 
-  <p>REPL（Read-Eval-Print Loop）是 Claude Code 交互的核心引擎。本节深入解析用户输入如何被捕获、解析和分发，以及 Early Input 如何解决启动延迟问题。</p>
+  <h2>Day 4: REPL 与输入</h2>
+  <p class="module-meta">🟡中级 · 预计时间: 1小时</p>
 
-  <div class="step-card">
-    <div class="step-badge">1</div>
-    <div>
-      <h4>REPL.tsx：核心交互引擎</h4>
-      <p>REPL.tsx 是整个交互循环的入口。它管理输入框状态、处理用户提交、调度 Agent 循环，并在 Agent 返回结果后等待下一轮输入。</p>
+  <p>REPL（Read-Eval-Print Loop）是 Claude Code 交互的核心引擎。本节深入解析输入处理、斜杠命令系统以及 Early Input 预捕获机制。</p>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>REPL.tsx 交互引擎</strong>
+        <p>REPL 组件管理整个交互循环：等待用户输入、提交给 Agent 处理、显示结果、再次等待输入。这是用户与 AI 对话的桥梁。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">2</div>
-    <div>
-      <h4>斜杠命令系统</h4>
-      <p>用户输入以 <code>/</code> 开头时，会被路由到斜杠命令系统。内置命令如 <code>/help</code>、<code>/clear</code>、<code>/compact</code> 等，支持自定义扩展。命令和普通对话走不同的处理路径。</p>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>斜杠命令系统</strong>
+        <p>输入 /help、/clear、/model 等斜杠命令可以直接控制 Claude Code 的行为，无需经过 AI 处理，提供快捷操作入口。</p>
+      </div>
     </div>
-  </div>
-
-  <div class="step-card">
-    <div class="step-badge">3</div>
-    <div>
-      <h4>Early Input 预捕获</h4>
-      <p>用户经常在 Claude Code 启动完成前就开始打字。Early Input 机制在启动阶段就开始监听键盘输入并缓存，初始化完成后立即使用缓存的输入，实现无缝体验。</p>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Early Input 预捕获</strong>
+        <p>在 Agent 处理期间，用户可以提前输入下一条消息。系统会缓存这些输入，等当前处理完成后立即提交，消除等待感。</p>
+      </div>
     </div>
   </div>
 
   <div class="callout-accent">
-    <strong>关键洞察：</strong> Early Input 是一个优秀的 UX 设计模式——不要让用户等你准备好，而是在你准备的同时就开始接收用户输入。
+    <strong>关键洞察：</strong> Early Input 机制让用户无需等待 AI 响应完成就能继续输入，大幅提升交互流畅度。
   </div>
 
   <h3>💻 核心代码</h3>
-  <pre><code class="language-typescript">// handleSubmit 简化版
+  <pre><code class="language-typescript">// handleSubmit 简化示意
 async function handleSubmit(input: string) {
-  // 斜杠命令走单独路径
   if (input.startsWith("/")) {
     return handleSlashCommand(input);
   }
 
-  // 普通对话：添加用户消息，启动 Agent 循环
+  // 添加用户消息到历史
   addMessage({ role: "user", content: input });
-  await runAgentLoop();
+
+  // 触发 Agent 循环
+  await query(messages);
 }</code></pre>
 
   <h3>🎯 知识检测</h3>
-  <div class="quiz-card" data-correct="0" data-explanation-0="正确！Early Input 在应用启动期间就开始缓存用户的键盘输入，启动完成后立即提交，避免用户重新输入。" data-explanation-1="自动补全是编辑器功能，不是 Early Input 的作用。" data-explanation-2="命令历史是 shell 功能，与 Early Input 无关。">
-    <p class="quiz-question">Early Input 机制解决了什么问题？</p>
+  <div class="quiz-card" data-correct="1" data-explanation-0="Early Input 不是用来加速 AI 的" data-explanation-1="正确！Early Input 缓存用户提前输入的内容" data-explanation-2="自动补全是另一个功能">
+    <p class="quiz-question">Early Input 解决什么问题？</p>
     <div class="quiz-options">
-      <button class="quiz-option">在启动期间缓存用户输入，启动完成后立即使用</button>
-      <button class="quiz-option">自动补全用户的命令</button>
-      <button class="quiz-option">记住上次的命令历史</button>
+      <button class="quiz-option">加速 AI 响应</button>
+      <button class="quiz-option">缓存用户提前输入</button>
+      <button class="quiz-option">自动补全命令</button>
     </div>
   </div>
 
   <h3>🔑 关键术语</h3>
-  <p>本节涉及的关键概念：<span class="term" data-definition="Read-Eval-Print Loop，读取输入→求值→打印结果→循环的交互模式">REPL</span>，<span class="term" data-definition="以 / 开头的特殊命令，如 /help、/clear，走独立的处理路径">斜杠命令</span>，<span class="term" data-definition="在应用初始化完成前就开始捕获用户键盘输入的优化机制">Early Input</span></p>
+  <p>本节关键概念：<span class="term" data-definition="Read-Eval-Print Loop，读取-求值-打印循环">REPL</span>，<span class="term" data-definition="以 / 开头的快捷命令，直接控制 Claude Code 行为">斜杠命令</span>，<span class="term" data-definition="在 Agent 处理期间预先缓存用户输入的机制">Early Input</span></p>
 
   <div class="callout-info">
     📖 <strong>完整学习指南：</strong> <a href="../week-01/day-04-repl-and-input.md">查看详细版 Markdown 指南 →</a>
   </div>
+
+</div>
 </section>
